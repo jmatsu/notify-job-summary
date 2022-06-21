@@ -2,7 +2,7 @@
 
 This GitHub Action notifies the job summary to Slack via the incoming webhook. 
 
-<img width="300" src="images/sample.png" />
+![images/sample.png](images/sample.png)
 
 > If you would like to get the notification for the workflow rather than jobs, `workflow_run` event is what you want.
 
@@ -44,7 +44,7 @@ steps:
 
 You can customize the message icon, the username and the channel. Please check [action.yml](./action.yml) for the inputs and/or outputs.
 
-<img width="300" src="images/customized.png" />
+![images/customized.png](images/customized.png)
 
 # Instructions
 
