@@ -17,13 +17,21 @@ jobs:
           npm run all
   test:
     runs-on: ubuntu-latest
+    services:
+      mock-server:
+        image: jmatsu/stub-nginx-for-notify-job-summary:latest
+        ports:
+          - 8080:80
     steps:
       - uses: actions/checkout@v2
-      - run: nohup awk -f ./.github/mock_server.gawk &
       - uses: ./
         id: test
         with:
-          webhook-url: http://localhost:8080
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
+      - run: |
+          cat<<EOF
+          ${{ toJSON(steps.test.outputs) }}
+          EOF
       - run: exit 0
         if: ${{ steps.test.outputs.ok == 'true' }}
       - run: exit 1

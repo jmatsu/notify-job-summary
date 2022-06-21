@@ -136,16 +136,10 @@ function run() {
             const payload = (0, payload_1.createPayload)(jobOption, slackOption, githubOption);
             const client = new http_client_1.HttpClient('notify-job-summary');
             const response = yield client.post(slackOption.webhookURL, JSON.stringify(payload));
-            const responseBody = JSON.parse(yield response.readBody());
+            const responseBody = yield response.readBody();
             core.setOutput('response', responseBody);
-            if (response.message.statusCode &&
-                200 <= response.message.statusCode &&
-                response.message.statusCode < 300) {
-                core.setOutput('ok', responseBody.ok === 'true');
-            }
-            else {
-                core.setOutput('ok', false);
-            }
+            core.setOutput('status-code', response.message.statusCode);
+            core.setOutput('ok', responseBody === 'ok');
         }
         catch (error) {
             core.setOutput('ok', false);

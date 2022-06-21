@@ -16,19 +16,11 @@ async function run(): Promise<void> {
       slackOption.webhookURL,
       JSON.stringify(payload)
     )
-    const responseBody = JSON.parse(await response.readBody())
+    const responseBody = await response.readBody()
 
     core.setOutput('response', responseBody)
-
-    if (
-      response.message.statusCode &&
-      200 <= response.message.statusCode &&
-      response.message.statusCode < 300
-    ) {
-      core.setOutput('ok', responseBody.ok === 'true')
-    } else {
-      core.setOutput('ok', false)
-    }
+    core.setOutput('status-code', response.message.statusCode)
+    core.setOutput('ok', responseBody === 'ok')
   } catch (error) {
     core.setOutput('ok', false)
     if (error instanceof Error) core.setFailed(error.message)
