@@ -37,8 +37,16 @@ jobs:
       - run: exit 1
         if: ${{ steps.test.outputs.ok != 'true' }}
       - uses: ./
-        id: test
         if: >
           always()
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
+          channel: "random"
+      - uses: ./
+        if: >
+          always()
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
+          channel: "C0G4GS22F"
+          author: "any-name-you-want"
+          author-icon-emoji: ":ok:"
