@@ -220,7 +220,7 @@ const createPayload = (jobOption, slackOption, githubOption) => {
     ];
     return {
         channel: slackOption.channel,
-        author: slackOption.author,
+        username: slackOption.author,
         icon_emoji: slackOption.authorIconEmoji,
         blocks
     };

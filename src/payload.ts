@@ -2,7 +2,7 @@ import {GitHubOption, JobOption, SlackOption} from './inputs'
 
 export interface Payload {
   channel?: string
-  author?: string
+  username?: string
   icon_emoji?: string
   blocks: unknown[]
 }
@@ -73,7 +73,7 @@ export const createPayload: (
 
   return {
     channel: slackOption.channel,
-    author: slackOption.author,
+    username: slackOption.author,
     icon_emoji: slackOption.authorIconEmoji,
     blocks
   }

@@ -45,7 +45,7 @@ test('attributes should match', async () => {
   const payload = createPayload(jobOption, slackOption, gitHubOption)
 
   expect(payload.channel).toEqual('channel id or name')
-  expect(payload.author).toEqual('notifier name')
+  expect(payload.username).toEqual('notifier name')
   expect(payload.icon_emoji).toEqual(':emoji:')
 
   const stringified = JSON.stringify(payload.blocks)
