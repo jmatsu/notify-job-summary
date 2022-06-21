@@ -1,17 +1,36 @@
+/*eslint sort-imports: ["error", { "ignoreDeclarationSort": true }]*/
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {HttpClient} from '@actions/http-client'
+import {parseInputs} from './inputs'
+import {createPayload} from './payload'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const {jobOption, slackOption, githubOption} = parseInputs()
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const payload = createPayload(jobOption, slackOption, githubOption)
 
-    core.setOutput('time', new Date().toTimeString())
+    const client = new HttpClient('notify-job-summary')
+
+    const response = await client.post(
+      slackOption.webhookURL,
+      JSON.stringify(payload)
+    )
+    const responseBody = JSON.parse(await response.readBody())
+
+    core.setOutput('response', responseBody)
+
+    if (
+      response.message.statusCode &&
+      200 <= response.message.statusCode &&
+      response.message.statusCode < 300
+    ) {
+      core.setOutput('ok', responseBody.ok === 'true')
+    } else {
+      core.setOutput('ok', false)
+    }
   } catch (error) {
+    core.setOutput('ok', false)
     if (error instanceof Error) core.setFailed(error.message)
   }
 }

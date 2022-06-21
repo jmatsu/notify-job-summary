@@ -1,11 +1,27 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Notify the job summary to Slack'
+description: 'This action notifies the job summary to Slack. Plesae note that you have to sepcify *if* condition when using this step for non-success status.'
+author: '@jmatsu'
 inputs:
-  milliseconds: # change this
+  webhook-url:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-runs:
-  using: 'node16'
-  main: 'dist/index.js'
+    description: "Slack webhook URL"
+  channel:
+    required: false
+    default: ''
+    description: "The channel id or name to notify. Use the default channel unless specified."
+  author:
+    required: false
+    default: github-actions
+    description: "The message author"
+  author-icon-emoji:
+    required: false
+    default: ""
+    description: "The message author icon (emoji)"
+  job-name:
+    required: false
+    default: ${{ job.name }}
+    description: "You do not have to modify this property"
+  job-status:
+    required: false
+    default: ${{ job.status }}
+    description: "You do not have to modify this property"
