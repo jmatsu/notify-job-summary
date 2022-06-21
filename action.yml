@@ -1,6 +1,6 @@
 name: 'Notify the job summary to Slack'
 description: 'This action notifies the job summary to Slack. Plesae note that you have to sepcify *if* condition when using this step for non-success status.'
-author: '@jmatsu'
+author: 'Jumpei Matsuda'
 runs:
   using: 'node16'
   main: 'dist/index.js'

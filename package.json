@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "notify-job-summary",
+  "version": "1.0",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Post GitHub Actions Job summary to Slack",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/jmatsu/notify-job-summary.git"
   },
   "keywords": [
     "actions",
     "node",
-    "setup"
+    "slack"
   ],
-  "author": "",
+  "author": "Jumpei Matsuda",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.6.0",
