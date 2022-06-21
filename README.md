@@ -10,35 +10,27 @@ This GitHub Action notifies the job summary to Slack via the incoming webhook.
 
 You can get alerts and/or intermediate reports from GitHub Actions by using this action. Basically, you need to combine `if` expression and the step position where defines this action. 
 
-## Get notifications as alerts
+For example, you can get notifications if a previous step fails and the job becomes `failure` in conclusion.
 
 ```yml
-steps:
-  - run: ... # do something
-  - uses: jmatsu/notify-job-summary@v1
-    if: >
-      failure()
-    with:
-      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-  # the end of the job
+on:
+  pull_request:
+
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+      - run: ./gradlew build
+      - uses: jmatsu/notify-job-summary@v1
+        if: >
+          failure()
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+# EOF
 ```
 
-Please refer to https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions for the status function.
-
-## Get intermediate reports
-
-```yml
-steps:
-  - run: ./.github/actions/create-staging-deployment
-    with: ...
-  - uses: jmatsu/notify-job-summary@v1
-    if: >
-      success()
-    with:
-      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-      username: "staging environment is ready"
-  - run: ... # the job continues...
-```
+This action will let you know the progress of the job if you insert this action into the middle of the steps. Please refer to https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions for the status function.
 
 ## Customization
 
