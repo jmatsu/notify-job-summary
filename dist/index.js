@@ -186,7 +186,7 @@ const createPayload = (jobOption, slackOption, githubOption) => {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in ${githubOption.repoSlug} has been *${jobOption.status}*. \n\n *You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *`
+                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*. \n\n *You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *`
             }
         },
         {
