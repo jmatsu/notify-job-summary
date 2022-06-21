@@ -28,3 +28,12 @@ inputs:
     required: false
     default: ${{ job.status }}
     description: "You do not have to modify this property"
+outputs:
+  payload:
+    description: the built payload. (stringified JSON object)
+  response:
+    description: the response body from Slack
+  status-code:
+    description: the response status code from Slack
+  ok:
+    description: '"true" if the request succeeded, otherwise "false"'

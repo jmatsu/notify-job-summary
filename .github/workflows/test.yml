@@ -36,3 +36,9 @@ jobs:
         if: ${{ steps.test.outputs.ok == 'true' }}
       - run: exit 1
         if: ${{ steps.test.outputs.ok != 'true' }}
+      - uses: ./
+        id: test
+        if: >
+          always()
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}

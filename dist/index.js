@@ -137,6 +137,7 @@ function run() {
             const client = new http_client_1.HttpClient('notify-job-summary');
             const response = yield client.post(slackOption.webhookURL, JSON.stringify(payload));
             const responseBody = yield response.readBody();
+            core.setOutput('payload', payload);
             core.setOutput('response', responseBody);
             core.setOutput('status-code', response.message.statusCode);
             core.setOutput('ok', responseBody === 'ok');
@@ -185,7 +186,7 @@ const createPayload = (jobOption, slackOption, githubOption) => {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in ${githubOption.repoSlug} has been *${jobOption.status}*. \n\n *You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId}*`
+                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in ${githubOption.repoSlug} has been *${jobOption.status}*. \n\n *You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *`
             }
         },
         {

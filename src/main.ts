@@ -18,6 +18,7 @@ async function run(): Promise<void> {
     )
     const responseBody = await response.readBody()
 
+    core.setOutput('payload', payload)
     core.setOutput('response', responseBody)
     core.setOutput('status-code', response.message.statusCode)
     core.setOutput('ok', responseBody === 'ok')
