@@ -1,6 +1,8 @@
 name: 'Notify the job summary to Slack'
 description: 'This action notifies the job summary to Slack.'
 author: 'Jumpei Matsuda'
+icon: 'alert-circle'
+color: 'gray-dark'
 runs:
   using: 'node16'
   main: 'dist/index.js'
