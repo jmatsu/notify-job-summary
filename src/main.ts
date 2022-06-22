@@ -6,12 +6,14 @@ import {createPayload} from './payload'
 
 async function run(): Promise<void> {
   try {
-    const {jobOption, slackOption, githubOption, templateOption} = parseInputs()
+    const {jobOption, slackOption, githubOption, runnerOption, templateOption} =
+      parseInputs()
 
     const payload = await createPayload(
       jobOption,
       slackOption,
       githubOption,
+      runnerOption,
       templateOption
     )
 
