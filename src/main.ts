@@ -6,9 +6,14 @@ import {createPayload} from './payload'
 
 async function run(): Promise<void> {
   try {
-    const {jobOption, slackOption, githubOption} = parseInputs()
+    const {jobOption, slackOption, githubOption, templateOption} = parseInputs()
 
-    const payload = createPayload(jobOption, slackOption, githubOption)
+    const payload = await createPayload(
+      jobOption,
+      slackOption,
+      githubOption,
+      templateOption
+    )
 
     const client = new HttpClient('notify-job-summary')
 

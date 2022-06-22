@@ -23,10 +23,14 @@ inputs:
     required: false
     default: ""
     description: "The message author icon (emoji)"
-  job-name:
+  content-template:
     required: false
-    default: ${{ job.name }}
-    description: "You do not have to modify this property"
+    default: ""
+    description: "a mds/ejs template to add the additional markdown content. Either one of this and content-template-path can be specified."
+  content-template-path:
+    required: false
+    default: ""
+    description: "a path to mds/ejs template to add the additional markdown content. Either one of this and content-template can be specified."
   job-status:
     required: false
     default: ${{ job.status }}

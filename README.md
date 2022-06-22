@@ -38,6 +38,31 @@ You can customize the message icon, the username and the channel. Please check [
 
 ![images/customized.png](images/customized.png)
 
+### Additional content
+
+`content-template` and `content-template-path` inputs allow adding the flexible markdown content to the notification. 
+
+```yml
+- uses: jmatsu/notify-job-summary@v1
+  if: >
+    failure()
+  with:
+    webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+    content-template: |
+      Hello world. You can embed the variables by <%= "here would be evaliated" %>.
+```
+
+The template engine is https://github.com/mde/ejs. Please check the latest options in [./src/template.ts](./src/template.ts) and [./src/payload.ts](./src/payload.ts).
+
+- `<%= content to be evaluated %>`
+  - The output is a html-escaped content. Use `<%- %>` if you don't wanna escape the value.
+- Available custom variables
+  - [githubOption: GitHubOption](./src/github.ts)
+  - [jobOption: JobOption](./src/job.ts)
+  - [slackOption: SlackOption](./src/slack.ts)
+
+![images/sample-content-template.png](images/sample-content-template.png)
+
 # Instructions
 
 - 1. Create an incoming webhook.
