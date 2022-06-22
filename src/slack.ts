@@ -1,6 +1,6 @@
 export interface SlackOption {
   webhookURL: string
   channel?: string
-  author?: string
+  authorName?: string
   authorIconEmoji?: string
 }

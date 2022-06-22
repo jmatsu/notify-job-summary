@@ -4,14 +4,13 @@ import {JobOption} from './job'
 import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
-import {RunnerOption} from './runner'
+import {GitHubActionOption} from './github_action'
 
 export interface Inputs {
   jobOption: JobOption
   slackOption: SlackOption
   githubOption: GitHubOption
   templateOption: TemplateOption
-  runnerOption: RunnerOption
 }
 
 export const parseInputs: () => Inputs = () => {
@@ -23,7 +22,7 @@ export const parseInputs: () => Inputs = () => {
     required: false,
     trimWhitespace: true
   })
-  const author = core.getInput('author', {
+  const authorName = core.getInput('author-name', {
     required: false,
     trimWhitespace: true
   })
@@ -31,6 +30,12 @@ export const parseInputs: () => Inputs = () => {
     required: false,
     trimWhitespace: true
   })
+  const showRunnerMetadata = parseBoolean(
+    core.getInput('show-runner-metadata', {
+      required: false,
+      trimWhitespace: true
+    })
+  )
   const jobStatus = core.getInput('job-status', {
     required: true,
     trimWhitespace: true
@@ -43,7 +48,7 @@ export const parseInputs: () => Inputs = () => {
     }
 
     if (templatePath) {
-      return readFileSync(templatePath).toString()
+      return readFileSync(templatePath, 'utf-8')
     } else if (template) {
       return template
     } else {
@@ -60,46 +65,79 @@ export const parseInputs: () => Inputs = () => {
     })
   )
 
-  const jobOption = {
+  const jobOption: JobOption = {
     id: ensurePresence(process.env.GITHUB_JOB),
-    status: jobStatus
+    status: jobStatus,
+    runner: showRunnerMetadata
+      ? {
+          arch: ensurePresence(process.env.RUNNER_ARCH),
+          name: ensurePresence(process.env.RUNNER_NAME),
+          os: ensurePresence(process.env.RUNNER_OS)
+        }
+      : undefined
   }
 
-  const slackOption = {
+  const slackOption: SlackOption = {
     webhookURL,
     channel: channel || undefined,
-    author: author || undefined,
+    authorName: authorName || undefined,
     authorIconEmoji: authorIconEmoji || undefined
   }
 
-  const githubOption = {
+  const actionOption: GitHubActionOption = {
     workflowName: ensurePresence(process.env.GITHUB_WORKFLOW),
     eventName: ensurePresence(process.env.GITHUB_EVENT_NAME),
     runId: ensurePresence(process.env.GITHUB_RUN_ID),
-    repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
-    actor: ensurePresence(process.env.GITHUB_ACTOR),
-    ref: ensurePresence(process.env.GITHUB_REF),
-    sha: ensurePresence(process.env.GITHUB_REF)
+    actor: ensurePresence(process.env.GITHUB_ACTOR)
   }
 
-  const runnerOption = {
-    arch: ensurePresence(process.env.RUNNER_ARCH),
-    name: ensurePresence(process.env.RUNNER_NAME),
-    os: ensurePresence(process.env.RUNNER_OS)
+  const event = JSON.parse(
+    readFileSync(ensurePresence(process.env.GITHUB_EVENT_PATH), 'utf-8')
+  )
+
+  actionOption.actionName = event.action
+
+  switch (actionOption.eventName) {
+    case 'pull_request':
+    case 'pull_request_target': {
+      const pullRequest = event.pull_request
+
+      actionOption.pullNumber = parseInt(pullRequest.number, 10)
+      break
+    }
+    case 'issue_comment': {
+      const issue = event.issue
+
+      if (issue.pull_request) {
+        actionOption.pullNumber = parseInt(issue.number, 10)
+      } else {
+        actionOption.pullNumber = parseInt(issue.number, 10)
+      }
+      break
+    }
+    case 'workflow_run': {
+      actionOption.targetWorkflowName = event.workflow.name
+      break
+    }
+  }
+
+  const githubOption: GitHubOption = {
+    repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
+    ref: ensurePresence(process.env.GITHUB_REF),
+    sha: ensurePresence(process.env.GITHUB_SHA),
+    action: actionOption
   }
 
   return {
     jobOption,
     slackOption,
     githubOption,
-    runnerOption,
     templateOption: {
       content: contentTemplate,
       options: {
-        jobOption,
-        slackOption,
-        githubOption,
-        runnerOption
+        job: jobOption,
+        slack: slackOption,
+        github: githubOption
       }
     }
   }
@@ -113,4 +151,15 @@ const ensurePresence: (v: string | undefined) => string = (
   }
 
   return v
+}
+
+const parseBoolean: (v: string | undefined) => boolean = (
+  v: string | undefined
+) => {
+  // https://docs.github.com/en/actions/learn-github-actions/expressions
+  if (!v || v === '' || v === '0' || v === 'false') {
+    return false
+  } else {
+    return true
+  }
 }

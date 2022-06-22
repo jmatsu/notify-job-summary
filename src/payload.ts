@@ -16,15 +16,19 @@ export const createPayload: (
   jobOption: JobOption,
   slackOption: SlackOption,
   githubOption: GitHubOption,
-  runnerOption: RunnerOption,
   templateOption: TemplateOption
 ) => Promise<Payload> = async (
   jobOption,
   slackOption,
   githubOption,
-  runnerOption,
   templateOption
 ) => {
+  const metadata = [
+    contextPart('workflow-name', githubOption.action.workflowName)
+  ]
+
+  const sectionText = []
+
   let jobStatusEmoji = ''
 
   switch (jobOption.status) {
@@ -46,20 +50,29 @@ export const createPayload: (
     }
   }
 
-  const additionalContent = templateOption.content
-    ? await ejs.render(`\n${templateOption.content}`, templateOption.options, {
+  sectionText.push(
+    `${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
+  )
+
+  sectionText.push('\n')
+  sectionText.push(
+    `You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`
+  )
+
+  if (templateOption.content) {
+    sectionText.push(
+      await ejs.render(`${templateOption.content}`, templateOption.options, {
         async: true
       })
-    : ''
+    )
+  }
 
   const blocks = [
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text:
-          `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
+        text: sectionText.join('\n')
       }
     },
     {
@@ -68,46 +81,77 @@ export const createPayload: (
     {
       type: 'context',
       elements: [
-        {
-          type: 'mrkdwn',
-          text: `*event* : ${githubOption.eventName}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*actor* ${githubOption.actor}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*ref* ${githubOption.ref}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*sha* ${githubOption.sha}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*job_id* ${jobOption.id}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*arch* ${runnerOption.arch}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*os* ${runnerOption.os}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*runner_name* ${runnerOption.name}`
-        }
+        ...metadata,
+        ...actionContextParts(githubOption),
+        ...buildContextParts(githubOption, jobOption.runner)
       ]
     }
   ]
 
   return {
     channel: slackOption.channel,
-    username: slackOption.author,
+    username: slackOption.authorName,
     icon_emoji: slackOption.authorIconEmoji,
     blocks
   }
+}
+
+interface MarkdownBlock {
+  type: 'mrkdwn'
+  text: string
+}
+
+const contextPart: (key: string, value: unknown) => MarkdownBlock = (
+  key,
+  value
+) => ({
+  type: 'mrkdwn',
+  text: `*${key}* : ${value}`
+})
+
+const actionContextParts = (github: GitHubOption): MarkdownBlock[] => {
+  const blocks: MarkdownBlock[] = []
+
+  if (github.action.actionName) {
+    blocks.push(contextPart('action-name', github.action.actionName))
+  }
+
+  if (github.action.pullNumber) {
+    blocks.push(contextPart('pull-number', github.action.pullNumber))
+  }
+
+  if (github.action.issueNumber) {
+    blocks.push(contextPart('issue-number', github.action.issueNumber))
+  }
+
+  if (github.action.targetWorkflowName) {
+    blocks.push(
+      contextPart('target-workflow-name', github.action.targetWorkflowName)
+    )
+  }
+
+  return [
+    contextPart('actor', github.action.actor),
+    contextPart('event', github.action.eventName),
+    ...blocks
+  ]
+}
+
+const buildContextParts = (
+  github: GitHubOption,
+  runner?: RunnerOption
+): MarkdownBlock[] => {
+  const blocks = []
+
+  if (runner) {
+    blocks.push(contextPart('arch', runner.arch))
+    blocks.push(contextPart('os', runner.os))
+    blocks.push(contextPart('runner-name', runner.name))
+  }
+
+  return [
+    contextPart('ref', github.ref),
+    contextPart('sha', github.sha),
+    ...blocks
+  ]
 }

@@ -1,3 +1,3 @@
 From a file template
 
-<%= jobOption.status %>
+<%= job.status %>

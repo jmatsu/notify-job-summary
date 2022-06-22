@@ -38,25 +38,34 @@ jobs:
       - run: exit 1
         if: ${{ steps.test.outputs.ok != 'true' }}
       - uses: ./
-        id: content-template
-        name: "with content-template"
+        name: "Dismiss some default elements"
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
-          content-template: ":right-facing_fist: <%= jobOption.status %>"
-          job-status: "This value has been embedded by the template"
+          content-template: "Hide some default elements"
+          show-default-title: false
+          show-runner-metadata: false
       - uses: ./
-        name: "with content-template-path"
+        name: "render the content of the content-template-path"
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           content-template-path: ".github/templates/sample.md"
-          job-status: "Hello from template"
+      - run: exit 1
+        id: continue
+        continue-on-error: true
       - uses: ./
-        name: "notifications on every execution"
+        name: "if continue-on-error is true and the job fails, success function returns true and can get success notification"
         if: >
-          always()
+          success()
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "random"
+          content-template: "if continue-on-error is true and the job fails, success function returns true and can get success notification"
+      - uses: ./
+        name: "if continue-on-error is true and the job fails, failure function does not return true so this never run"
+        if: >
+          failure()
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
       - uses: ./
         name: "notifications on every execution with changing the author information"
         if: >
@@ -64,5 +73,6 @@ jobs:
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "C0G4GS22F"
-          author: "any-name-you-want"
+          author-name: "any-name-you-want"
           author-icon-emoji: ":ok:"
+

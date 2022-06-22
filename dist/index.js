@@ -42,7 +42,7 @@ const parseInputs = () => {
         required: false,
         trimWhitespace: true
     });
-    const author = core.getInput('author', {
+    const authorName = core.getInput('author-name', {
         required: false,
         trimWhitespace: true
     });
@@ -50,6 +50,10 @@ const parseInputs = () => {
         required: false,
         trimWhitespace: true
     });
+    const showRunnerMetadata = parseBoolean(core.getInput('show-runner-metadata', {
+        required: false,
+        trimWhitespace: true
+    }));
     const jobStatus = core.getInput('job-status', {
         required: true,
         trimWhitespace: true
@@ -59,7 +63,7 @@ const parseInputs = () => {
             throw new Error('Either one of content-template and content-template-path can be specified');
         }
         if (templatePath) {
-            return (0, fs_1.readFileSync)(templatePath).toString();
+            return (0, fs_1.readFileSync)(templatePath, 'utf-8');
         }
         else if (template) {
             return template;
@@ -76,40 +80,67 @@ const parseInputs = () => {
     }));
     const jobOption = {
         id: ensurePresence(process.env.GITHUB_JOB),
-        status: jobStatus
+        status: jobStatus,
+        runner: showRunnerMetadata
+            ? {
+                arch: ensurePresence(process.env.RUNNER_ARCH),
+                name: ensurePresence(process.env.RUNNER_NAME),
+                os: ensurePresence(process.env.RUNNER_OS)
+            }
+            : undefined
     };
     const slackOption = {
         webhookURL,
         channel: channel || undefined,
-        author: author || undefined,
+        authorName: authorName || undefined,
         authorIconEmoji: authorIconEmoji || undefined
     };
-    const githubOption = {
+    const actionOption = {
         workflowName: ensurePresence(process.env.GITHUB_WORKFLOW),
         eventName: ensurePresence(process.env.GITHUB_EVENT_NAME),
         runId: ensurePresence(process.env.GITHUB_RUN_ID),
-        repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
-        actor: ensurePresence(process.env.GITHUB_ACTOR),
-        ref: ensurePresence(process.env.GITHUB_REF),
-        sha: ensurePresence(process.env.GITHUB_REF)
+        actor: ensurePresence(process.env.GITHUB_ACTOR)
     };
-    const runnerOption = {
-        arch: ensurePresence(process.env.RUNNER_ARCH),
-        name: ensurePresence(process.env.RUNNER_NAME),
-        os: ensurePresence(process.env.RUNNER_OS)
+    const event = JSON.parse((0, fs_1.readFileSync)(ensurePresence(process.env.GITHUB_EVENT_PATH), 'utf-8'));
+    actionOption.actionName = event.action;
+    switch (actionOption.eventName) {
+        case 'pull_request':
+        case 'pull_request_target': {
+            const pullRequest = event.pull_request;
+            actionOption.pullNumber = parseInt(pullRequest.number, 10);
+            break;
+        }
+        case 'issue_comment': {
+            const issue = event.issue;
+            if (issue.pull_request) {
+                actionOption.pullNumber = parseInt(issue.number, 10);
+            }
+            else {
+                actionOption.pullNumber = parseInt(issue.number, 10);
+            }
+            break;
+        }
+        case 'workflow_run': {
+            actionOption.targetWorkflowName = event.workflow.name;
+            break;
+        }
+    }
+    const githubOption = {
+        repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
+        ref: ensurePresence(process.env.GITHUB_REF),
+        sha: ensurePresence(process.env.GITHUB_SHA),
+        action: actionOption
     };
     return {
         jobOption,
         slackOption,
         githubOption,
-        runnerOption,
         templateOption: {
             content: contentTemplate,
             options: {
-                jobOption,
-                slackOption,
-                githubOption,
-                runnerOption
+                job: jobOption,
+                slack: slackOption,
+                github: githubOption
             }
         }
     };
@@ -120,6 +151,15 @@ const ensurePresence = (v) => {
         throw new Error('unexpected non-presence value is detected');
     }
     return v;
+};
+const parseBoolean = (v) => {
+    // https://docs.github.com/en/actions/learn-github-actions/expressions
+    if (!v || v === '' || v === '0' || v === 'false') {
+        return false;
+    }
+    else {
+        return true;
+    }
 };
 
 
@@ -171,8 +211,8 @@ const payload_1 = __nccwpck_require__(995);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { jobOption, slackOption, githubOption, runnerOption, templateOption } = (0, inputs_1.parseInputs)();
-            const payload = yield (0, payload_1.createPayload)(jobOption, slackOption, githubOption, runnerOption, templateOption);
+            const { jobOption, slackOption, githubOption, templateOption } = (0, inputs_1.parseInputs)();
+            const payload = yield (0, payload_1.createPayload)(jobOption, slackOption, githubOption, templateOption);
             const client = new http_client_1.HttpClient('notify-job-summary');
             const response = yield client.post(slackOption.webhookURL, JSON.stringify(payload));
             const responseBody = yield response.readBody();
@@ -233,7 +273,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPayload = void 0;
 const ejs = __importStar(__nccwpck_require__(431));
-const createPayload = (jobOption, slackOption, githubOption, runnerOption, templateOption) => __awaiter(void 0, void 0, void 0, function* () {
+const createPayload = (jobOption, slackOption, githubOption, templateOption) => __awaiter(void 0, void 0, void 0, function* () {
+    const metadata = [
+        contextPart('workflow-name', githubOption.action.workflowName)
+    ];
+    const sectionText = [];
     let jobStatusEmoji = '';
     switch (jobOption.status) {
         case 'success': {
@@ -253,18 +297,20 @@ const createPayload = (jobOption, slackOption, githubOption, runnerOption, templ
             break;
         }
     }
-    const additionalContent = templateOption.content
-        ? yield ejs.render(`\n${templateOption.content}`, templateOption.options, {
+    sectionText.push(`${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`);
+    sectionText.push('\n');
+    sectionText.push(`You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`);
+    if (templateOption.content) {
+        sectionText.push(yield ejs.render(`${templateOption.content}`, templateOption.options, {
             async: true
-        })
-        : '';
+        }));
+    }
     const blocks = [
         {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-                    `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
+                text: sectionText.join('\n')
             }
         },
         {
@@ -273,49 +319,57 @@ const createPayload = (jobOption, slackOption, githubOption, runnerOption, templ
         {
             type: 'context',
             elements: [
-                {
-                    type: 'mrkdwn',
-                    text: `*event* : ${githubOption.eventName}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*actor* ${githubOption.actor}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*ref* ${githubOption.ref}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*sha* ${githubOption.sha}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*job_id* ${jobOption.id}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*arch* ${runnerOption.arch}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*os* ${runnerOption.os}`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*runner_name* ${runnerOption.name}`
-                }
+                ...metadata,
+                ...actionContextParts(githubOption),
+                ...buildContextParts(githubOption, jobOption.runner)
             ]
         }
     ];
     return {
         channel: slackOption.channel,
-        username: slackOption.author,
+        username: slackOption.authorName,
         icon_emoji: slackOption.authorIconEmoji,
         blocks
     };
 });
 exports.createPayload = createPayload;
+const contextPart = (key, value) => ({
+    type: 'mrkdwn',
+    text: `*${key}* : ${value}`
+});
+const actionContextParts = (github) => {
+    const blocks = [];
+    if (github.action.actionName) {
+        blocks.push(contextPart('action-name', github.action.actionName));
+    }
+    if (github.action.pullNumber) {
+        blocks.push(contextPart('pull-number', github.action.pullNumber));
+    }
+    if (github.action.issueNumber) {
+        blocks.push(contextPart('issue-number', github.action.issueNumber));
+    }
+    if (github.action.targetWorkflowName) {
+        blocks.push(contextPart('target-workflow-name', github.action.targetWorkflowName));
+    }
+    return [
+        contextPart('actor', github.action.actor),
+        contextPart('event', github.action.eventName),
+        ...blocks
+    ];
+};
+const buildContextParts = (github, runner) => {
+    const blocks = [];
+    if (runner) {
+        blocks.push(contextPart('arch', runner.arch));
+        blocks.push(contextPart('os', runner.os));
+        blocks.push(contextPart('runner-name', runner.name));
+    }
+    return [
+        contextPart('ref', github.ref),
+        contextPart('sha', github.sha),
+        ...blocks
+    ];
+};
 
 
 /***/ }),
