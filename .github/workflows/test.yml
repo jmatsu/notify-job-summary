@@ -37,6 +37,16 @@ jobs:
       - run: exit 1
         if: ${{ steps.test.outputs.ok != 'true' }}
       - uses: ./
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
+          content-template: ":right-facing_fist: <%= jobOption.id %>"
+          job_id: "This value has been embedded by the template"
+      - uses: ./
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
+          content-template-path: ".github/templates/sample.md"
+          job_id: "Hello from template"
+      - uses: ./
         if: >
           always()
         with:

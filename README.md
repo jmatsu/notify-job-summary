@@ -38,6 +38,22 @@ You can customize the message icon, the username and the channel. Please check [
 
 ![images/customized.png](images/customized.png)
 
+### Additional content
+
+https://github.com/mde/ejs
+
+`content-template` and `content-template-path` inputs allow adding the flexible markdown content to the notification. Please note that these parameters are optional and the both of them will be an error.
+
+```yml
+- uses: jmatsu/notify-job-summary@v1
+  if: >
+    failure()
+  with:
+    webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+    content-template: |
+      Hello world. For example, the generated contents, 
+```
+
 # Instructions
 
 - 1. Create an incoming webhook.

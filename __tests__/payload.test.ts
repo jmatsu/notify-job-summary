@@ -1,6 +1,9 @@
 import {createPayload} from '../src/payload'
 import {expect, test} from '@jest/globals'
-import {JobOption, GitHubOption, SlackOption} from '../src/inputs'
+import { TemplateOption } from '../src/template';
+import { JobOption } from '../src/job';
+import { SlackOption } from '../src/slack';
+import { GitHubOption } from '../src/github';
 
 const jobOption: JobOption = {
   id: 'job id',
@@ -14,7 +17,7 @@ const slackOption: SlackOption = {
   authorIconEmoji: ':emoji:'
 }
 
-const gitHubOption: GitHubOption = {
+const githubOption: GitHubOption = {
   workflowName: 'super cool workflow',
   eventName: 'fake event name',
   runId: 'fake 12345',
@@ -24,16 +27,26 @@ const gitHubOption: GitHubOption = {
   sha: 'fake sha'
 }
 
+const templateOption: TemplateOption = {
+  content: undefined,
+  options: {
+    jobOption,
+    slackOption,
+    githubOption,
+  }
+}
+
 // We guess some of users wanna hide these values to open
 test('do not expose secrets', async () => {
-  const payload = createPayload(
+  const payload = await createPayload(
     jobOption,
     {
       ...slackOption,
       webhookURL: 'do not expose',
       channel: 'do not expose'
     },
-    gitHubOption
+    githubOption,
+    templateOption
   )
 
   expect(JSON.stringify(payload.blocks).indexOf('do not expose')).toBeLessThan(
@@ -42,7 +55,7 @@ test('do not expose secrets', async () => {
 })
 
 test('attributes should match', async () => {
-  const payload = createPayload(jobOption, slackOption, gitHubOption)
+  const payload = await createPayload(jobOption, slackOption, githubOption, templateOption)
 
   expect(payload.channel).toEqual('channel id or name')
   expect(payload.username).toEqual('notifier name')
@@ -51,52 +64,97 @@ test('attributes should match', async () => {
   const stringified = JSON.stringify(payload.blocks)
 
   expect(stringified).toContain(jobOption.id)
-  expect(stringified).toContain(gitHubOption.workflowName)
-  expect(stringified).toContain(gitHubOption.eventName)
+  expect(stringified).toContain(githubOption.workflowName)
+  expect(stringified).toContain(githubOption.eventName)
   expect(stringified).toContain(
     'https://github.com/fake orgName/repoName/actions/runs/fake 12345'
   )
-  expect(stringified).toContain(gitHubOption.repoSlug)
-  expect(stringified).toContain(gitHubOption.actor)
-  expect(stringified).toContain(gitHubOption.ref)
-  expect(stringified).toContain(gitHubOption.sha)
+  expect(stringified).toContain(githubOption.repoSlug)
+  expect(stringified).toContain(githubOption.actor)
+  expect(stringified).toContain(githubOption.ref)
+  expect(stringified).toContain(githubOption.sha)
 })
 
 test('make sure job status is correctly reflected', async () => {
   expect(
     JSON.stringify(
-      createPayload(
+      await createPayload(
         {
           ...jobOption,
           status: 'success'
         },
         slackOption,
-        gitHubOption
+        githubOption,
+        templateOption
       )
     )
   ).toContain('success')
   expect(
     JSON.stringify(
-      createPayload(
+      await createPayload(
         {
           ...jobOption,
           status: 'failure'
         },
         slackOption,
-        gitHubOption
+        githubOption,
+        templateOption
       )
     )
   ).toContain('failure')
   expect(
     JSON.stringify(
-      createPayload(
+      await createPayload(
         {
           ...jobOption,
           status: 'cancelled'
         },
         slackOption,
-        gitHubOption
+        githubOption,
+        templateOption
       )
     )
   ).toContain('cancelled')
 })
+
+
+test('attributes should match', async () => {
+  const payload = await createPayload(jobOption, slackOption, githubOption, templateOption)
+
+  expect(payload.channel).toEqual('channel id or name')
+  expect(payload.username).toEqual('notifier name')
+  expect(payload.icon_emoji).toEqual(':emoji:')
+
+  const stringified = JSON.stringify(payload.blocks)
+
+  expect(stringified).toContain(jobOption.id)
+  expect(stringified).toContain(githubOption.workflowName)
+  expect(stringified).toContain(githubOption.eventName)
+  expect(stringified).toContain(
+    'https://github.com/fake orgName/repoName/actions/runs/fake 12345'
+  )
+  expect(stringified).toContain(githubOption.repoSlug)
+  expect(stringified).toContain(githubOption.actor)
+  expect(stringified).toContain(githubOption.ref)
+  expect(stringified).toContain(githubOption.sha)
+})
+
+test('make sure template has rendered', async () => {
+  expect(
+    JSON.stringify(
+      await createPayload(
+        {
+          ...jobOption,
+          status: 'success'
+        },
+        slackOption,
+        githubOption,
+        {
+          ...templateOption,
+          content: "rendered <%= jobOption.id %>"
+        }
+      )
+    )
+  ).toContain(`rendered ${jobOption.id}`)
+})
+
