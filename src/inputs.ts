@@ -4,16 +4,13 @@ import {JobOption} from './job'
 import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
-import {RunnerOption} from './runner'
 import {GitHubActionOption} from './github_action'
 
 export interface Inputs {
   jobOption: JobOption
   slackOption: SlackOption
   githubOption: GitHubOption
-  actionOption: GitHubActionOption
   templateOption: TemplateOption
-  runnerOption: RunnerOption
 }
 
 export const parseInputs: () => Inputs = () => {
@@ -45,7 +42,7 @@ export const parseInputs: () => Inputs = () => {
     }
 
     if (templatePath) {
-      return readFileSync(templatePath).toString()
+      return readFileSync(templatePath, 'utf-8')
     } else if (template) {
       return template
     } else {
@@ -62,51 +59,77 @@ export const parseInputs: () => Inputs = () => {
     })
   )
 
-  const jobOption = {
+  const jobOption: JobOption = {
     id: ensurePresence(process.env.GITHUB_JOB),
-    status: jobStatus
+    status: jobStatus,
+    runner: {
+      arch: ensurePresence(process.env.RUNNER_ARCH),
+      name: ensurePresence(process.env.RUNNER_NAME),
+      os: ensurePresence(process.env.RUNNER_OS)
+    }
   }
 
-  const slackOption = {
+  const slackOption: SlackOption = {
     webhookURL,
     channel: channel || undefined,
     author: author || undefined,
     authorIconEmoji: authorIconEmoji || undefined
   }
 
-  const githubOption = {
-    repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
-    ref: ensurePresence(process.env.GITHUB_REF),
-    sha: ensurePresence(process.env.GITHUB_REF)
-  }
-
-  const actionOption = {
+  const actionOption: GitHubActionOption = {
     workflowName: ensurePresence(process.env.GITHUB_WORKFLOW),
     eventName: ensurePresence(process.env.GITHUB_EVENT_NAME),
     runId: ensurePresence(process.env.GITHUB_RUN_ID),
     actor: ensurePresence(process.env.GITHUB_ACTOR)
   }
 
-  const runnerOption = {
-    arch: ensurePresence(process.env.RUNNER_ARCH),
-    name: ensurePresence(process.env.RUNNER_NAME),
-    os: ensurePresence(process.env.RUNNER_OS)
+  const event = JSON.parse(
+    readFileSync(ensurePresence(process.env.GITHUB_EVENT_PATH), 'utf-8')
+  )
+
+  actionOption.actionName = event.action
+
+  switch (actionOption.eventName) {
+    case 'pull_request':
+    case 'pull_request_target': {
+      const pullRequest = event.pull_request
+
+      actionOption.pullNumber = parseInt(pullRequest.number, 10)
+      break
+    }
+    case 'issue_comment': {
+      const issue = event.issue
+
+      if (issue.pull_request) {
+        actionOption.pullNumber = parseInt(issue.number, 10)
+      } else {
+        actionOption.pullNumber = parseInt(issue.number, 10)
+      }
+      break
+    }
+    case 'workflow_run': {
+      actionOption.incomingWorkflowName = event.workflow.name
+      break
+    }
+  }
+
+  const githubOption: GitHubOption = {
+    repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
+    ref: ensurePresence(process.env.GITHUB_REF),
+    sha: ensurePresence(process.env.GITHUB_REF),
+    action: actionOption
   }
 
   return {
     jobOption,
     slackOption,
     githubOption,
-    actionOption,
-    runnerOption,
     templateOption: {
       content: contentTemplate,
       options: {
-        jobOption,
-        slackOption,
-        githubOption,
-        actionOption,
-        runnerOption
+        job: jobOption,
+        slack: slackOption,
+        github: githubOption
       }
     }
   }

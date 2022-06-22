@@ -3,4 +3,8 @@ export interface GitHubActionOption {
   eventName: string
   runId: string
   actor: string
+  actionName?: string
+  pullNumber?: number
+  issueNumber?: number
+  incomingWorkflowName?: string
 }

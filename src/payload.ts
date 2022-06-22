@@ -3,8 +3,6 @@ import {JobOption} from './job'
 import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
-import {RunnerOption} from './runner'
-import {GitHubActionOption} from './github_action'
 
 export interface Payload {
   channel?: string
@@ -17,15 +15,11 @@ export const createPayload: (
   jobOption: JobOption,
   slackOption: SlackOption,
   githubOption: GitHubOption,
-  actionOption: GitHubActionOption,
-  runnerOption: RunnerOption,
   templateOption: TemplateOption
 ) => Promise<Payload> = async (
   jobOption,
   slackOption,
   githubOption,
-  actionOption,
-  runnerOption,
   templateOption
 ) => {
   let jobStatusEmoji = ''
@@ -61,8 +55,8 @@ export const createPayload: (
       text: {
         type: 'mrkdwn',
         text:
-          `${jobStatusEmoji} GitHub Actions workflow *${actionOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${actionOption.runId} *${additionalContent}`
+          `${jobStatusEmoji} GitHub Actions workflow *${githubOption.action.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
+          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId} *${additionalContent}`
       }
     },
     {
@@ -70,40 +64,14 @@ export const createPayload: (
     },
     {
       type: 'context',
-      elements: [
-        {
-          type: 'mrkdwn',
-          text: `*event* : ${actionOption.eventName}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*actor* ${actionOption.actor}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*ref* ${githubOption.ref}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*sha* ${githubOption.sha}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*job_id* ${jobOption.id}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*arch* ${runnerOption.arch}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*os* ${runnerOption.os}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*runner_name* ${runnerOption.name}`
-        }
-      ]
+      elements: [...githubOptionElements(githubOption)]
+    },
+    {
+      type: 'divider'
+    },
+    {
+      type: 'context',
+      elements: [...jobOptionElements(jobOption)]
     }
   ]
 
@@ -113,4 +81,51 @@ export const createPayload: (
     icon_emoji: slackOption.authorIconEmoji,
     blocks
   }
+}
+
+interface MarkdownBlock {
+  type: 'mrkdwn'
+  text: string
+}
+
+const githubOptionElements = (option: GitHubOption): MarkdownBlock[] => {
+  return [
+    {
+      type: 'mrkdwn',
+      text: `*event* : ${option.action.eventName}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*actor* ${option.action.actor}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*ref* ${option.ref}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*sha* ${option.sha}`
+    }
+  ]
+}
+
+const jobOptionElements = (option: JobOption): MarkdownBlock[] => {
+  return [
+    {
+      type: 'mrkdwn',
+      text: `*job_id* ${option.id}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*arch* ${option.runner.arch}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*os* ${option.runner.os}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*runner_name* ${option.runner.name}`
+    }
+  ]
 }
