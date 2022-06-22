@@ -19,9 +19,7 @@ This GitHub Action notifies the job summary to Slack via the incoming webhook.
 
 You can get alerts and/or intermediate reports from GitHub Actions by using this action. If this action is the last action in the job, then this will notify the conclusion result to your Slack. Otherwise, so you insert this action as the intermediate step, this action will let you know the progress of the job. 
 
-For better experiences, you have to combine `if` expression and the step position where defines this action basically. 
-
-For example, you can get notifications if a previous step fails and the job becomes `failure` in conclusion.
+For better experiences, you have to combine `if` expression and the step position where defines this action basically. For example, you can get notifications if a previous step fails and the job becomes `failure` in conclusion.
 
 ```yml
 on:
@@ -41,10 +39,9 @@ jobs:
 # EOF
 ```
 
- Please refer to the following links for the status function and more. Please be careful the condition is more complex if you are using `continue-on-error: true` in the job.
+ Please refer to the following links for the status function. 
 
 - https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
-- https://docs.github.com/en/actions/learn-github-actions/contexts#steps-context
 
 ## Customization
 
