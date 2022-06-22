@@ -25,6 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./
+        name: "with minimum requirements"
         id: test
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
@@ -37,22 +38,31 @@ jobs:
       - run: exit 1
         if: ${{ steps.test.outputs.ok != 'true' }}
       - uses: ./
+        id: content-template
+        name: "with content-template"
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           content-template: ":right-facing_fist: <%= jobOption.status %>"
           job-status: "This value has been embedded by the template"
+      - run: |
+          cat<<EOF
+          ${{ toJSON(steps.content-template.outputs) }}
+          EOF
       - uses: ./
+        name: "with content-template-path"
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           content-template-path: ".github/templates/sample.md"
           job-status: "Hello from template"
       - uses: ./
+        name: "notifications on every execution"
         if: >
           always()
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "random"
       - uses: ./
+        name: "notifications on every execution with changing the author information"
         if: >
           always()
         with:

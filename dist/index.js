@@ -246,15 +246,18 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
             break;
         }
     }
-    const additionalContent = templateOption.content ? ejs.render(`\n${templateOption.content}`, templateOption.options, {
-        async: true,
-    }) : "";
+    const additionalContent = templateOption.content
+        ? yield ejs.render(`\n${templateOption.content}`, templateOption.options, {
+            async: true
+        })
+        : '';
     const blocks = [
         {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*. \n\n *You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
+                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
+                    `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
             }
         },
         {

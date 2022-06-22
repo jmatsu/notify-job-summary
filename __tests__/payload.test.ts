@@ -1,9 +1,9 @@
 import {createPayload} from '../src/payload'
 import {expect, test} from '@jest/globals'
-import { TemplateOption } from '../src/template';
-import { JobOption } from '../src/job';
-import { SlackOption } from '../src/slack';
-import { GitHubOption } from '../src/github';
+import {TemplateOption} from '../src/template'
+import {JobOption} from '../src/job'
+import {SlackOption} from '../src/slack'
+import {GitHubOption} from '../src/github'
 
 const jobOption: JobOption = {
   id: 'job id',
@@ -32,7 +32,7 @@ const templateOption: TemplateOption = {
   options: {
     jobOption,
     slackOption,
-    githubOption,
+    githubOption
   }
 }
 
@@ -55,7 +55,12 @@ test('do not expose secrets', async () => {
 })
 
 test('attributes should match', async () => {
-  const payload = await createPayload(jobOption, slackOption, githubOption, templateOption)
+  const payload = await createPayload(
+    jobOption,
+    slackOption,
+    githubOption,
+    templateOption
+  )
 
   expect(payload.channel).toEqual('channel id or name')
   expect(payload.username).toEqual('notifier name')
@@ -117,9 +122,13 @@ test('make sure job status is correctly reflected', async () => {
   ).toContain('cancelled')
 })
 
-
 test('attributes should match', async () => {
-  const payload = await createPayload(jobOption, slackOption, githubOption, templateOption)
+  const payload = await createPayload(
+    jobOption,
+    slackOption,
+    githubOption,
+    templateOption
+  )
 
   expect(payload.channel).toEqual('channel id or name')
   expect(payload.username).toEqual('notifier name')
@@ -151,10 +160,9 @@ test('make sure template has rendered', async () => {
         githubOption,
         {
           ...templateOption,
-          content: "rendered <%= jobOption.id %>"
+          content: 'rendered <%= jobOption.id %>'
         }
       )
     )
   ).toContain(`rendered ${jobOption.id}`)
 })
-
