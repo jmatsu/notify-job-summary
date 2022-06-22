@@ -6,5 +6,5 @@ export interface GitHubActionOption {
   actionName?: string
   pullNumber?: number
   issueNumber?: number
-  incomingWorkflowName?: string
+  targetWorkflowName?: string
 }

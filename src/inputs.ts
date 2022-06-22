@@ -108,7 +108,7 @@ export const parseInputs: () => Inputs = () => {
       break
     }
     case 'workflow_run': {
-      actionOption.incomingWorkflowName = event.workflow.name
+      actionOption.targetWorkflowName = event.workflow.name
       break
     }
   }

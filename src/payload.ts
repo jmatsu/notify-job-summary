@@ -88,44 +88,49 @@ interface MarkdownBlock {
   text: string
 }
 
+const contextPart: (key: string, value: unknown) => MarkdownBlock = (
+  key,
+  value
+) => ({
+  type: 'mrkdwn',
+  text: `*${key}* : ${value}`
+})
+
 const githubOptionElements = (option: GitHubOption): MarkdownBlock[] => {
+  const blocks: MarkdownBlock[] = []
+
+  if (option.action.pullNumber) {
+    blocks.push(contextPart('pull-number', option.action.pullNumber))
+  }
+
+  if (option.action.issueNumber) {
+    blocks.push(contextPart('issue-number', option.action.issueNumber))
+  }
+
+  if (option.action.actionName) {
+    blocks.push(contextPart('action-name', option.action.actionName))
+  }
+
+  if (option.action.targetWorkflowName) {
+    blocks.push(
+      contextPart('target-workflow-name', option.action.targetWorkflowName)
+    )
+  }
+
   return [
-    {
-      type: 'mrkdwn',
-      text: `*event* : ${option.action.eventName}`
-    },
-    {
-      type: 'mrkdwn',
-      text: `*actor* ${option.action.actor}`
-    },
-    {
-      type: 'mrkdwn',
-      text: `*ref* ${option.ref}`
-    },
-    {
-      type: 'mrkdwn',
-      text: `*sha* ${option.sha}`
-    }
+    contextPart('event', option.action.eventName),
+    contextPart('actor', option.action.actor),
+    contextPart('ref', option.ref),
+    contextPart('sha', option.sha),
+    ...blocks
   ]
 }
 
 const jobOptionElements = (option: JobOption): MarkdownBlock[] => {
   return [
-    {
-      type: 'mrkdwn',
-      text: `*job_id* ${option.id}`
-    },
-    {
-      type: 'mrkdwn',
-      text: `*arch* ${option.runner.arch}`
-    },
-    {
-      type: 'mrkdwn',
-      text: `*os* ${option.runner.os}`
-    },
-    {
-      type: 'mrkdwn',
-      text: `*runner_name* ${option.runner.name}`
-    }
+    contextPart('job_id', option.id),
+    contextPart('arch', option.runner.arch),
+    contextPart('os', option.runner.os),
+    contextPart('runner-name', option.runner.name)
   ]
 }
