@@ -61,6 +61,8 @@ The template engine is https://github.com/mde/ejs. Please check the latest optio
   - [jobOption: JobOption](./src/job.ts)
   - [slackOption: SlackOption](./src/slack.ts)
 
+![images/sample-content-template.png](images/sample-content-template.png)
+
 # Instructions
 
 - 1. Create an incoming webhook.

@@ -44,10 +44,6 @@ jobs:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           content-template: ":right-facing_fist: <%= jobOption.status %>"
           job-status: "This value has been embedded by the template"
-      - run: |
-          cat<<EOF
-          ${{ toJSON(steps.content-template.outputs) }}
-          EOF
       - uses: ./
         name: "with content-template-path"
         with:
