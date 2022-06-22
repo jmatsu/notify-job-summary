@@ -31,10 +31,6 @@ inputs:
     required: false
     default: ""
     description: "a path to mds/ejs template to add the additional markdown content. Either one of this and content-template can be specified."
-  job-name:
-    required: false
-    default: ${{ job.name }}
-    description: "You do not have to modify this property"
   job-status:
     required: false
     default: ${{ job.status }}

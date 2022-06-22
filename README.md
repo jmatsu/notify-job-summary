@@ -40,9 +40,7 @@ You can customize the message icon, the username and the channel. Please check [
 
 ### Additional content
 
-https://github.com/mde/ejs
-
-`content-template` and `content-template-path` inputs allow adding the flexible markdown content to the notification. Please note that these parameters are optional and the both of them will be an error.
+`content-template` and `content-template-path` inputs allow adding the flexible markdown content to the notification. 
 
 ```yml
 - uses: jmatsu/notify-job-summary@v1
@@ -51,8 +49,17 @@ https://github.com/mde/ejs
   with:
     webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
     content-template: |
-      Hello world. For example, the generated contents, 
+      Hello world. You can embed the variables by <%= "here would be evaliated" %>.
 ```
+
+The template engine is https://github.com/mde/ejs. Please check the latest options in [./src/template.ts](./src/template.ts) and [./src/payload.ts](./src/payload.ts).
+
+- `<%= content to be evaluated %>`
+  - The output is a html-escaped content. Use `<%- %>` if you don't wanna escape the value.
+- Available custom variables
+  - [githubOption: GitHubOption](./src/github.ts)
+  - [jobOption: JobOption](./src/job.ts)
+  - [slackOption: SlackOption](./src/slack.ts)
 
 # Instructions
 
