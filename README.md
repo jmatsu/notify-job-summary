@@ -75,9 +75,9 @@ The template engine is https://github.com/mde/ejs. Please check the latest optio
 - `<%= content to be evaluated %>`
   - The output is a html-escaped content. Use `<%- %>` if you don't wanna escape the value.
 - Available custom variables
-  - [githubOption: GitHubOption](./src/github.ts)
-  - [jobOption: JobOption](./src/job.ts)
-  - [slackOption: SlackOption](./src/slack.ts)
+  - [github: GitHubOption](./src/github.ts)
+  - [job: JobOption](./src/job.ts)
+  - [slack: SlackOption](./src/slack.ts)
 
 ![images/sample-content-template.png](images/sample-content-template.png)
 
