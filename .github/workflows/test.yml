@@ -38,36 +38,32 @@ jobs:
       - run: exit 1
         if: ${{ steps.test.outputs.ok != 'true' }}
       - uses: ./
-        id: content-template
-        name: "with content-template"
+        name: "Dismiss some default elements"
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
-          content-template: ":right-facing_fist: <%= job.status %>"
-          job-status: "This value has been embedded by the template"
+          show-default-title: false
+          show-runner-metadata: false
       - uses: ./
-        name: "with content-template-path"
+        name: "render the content of the content-template-path"
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           content-template-path: ".github/templates/sample.md"
-          job-status: "Hello from template"
       - run: exit 1
         continue-on-error: true
       - uses: ./
-        name: "success after continue-on-error"
+        name: "if continue-on-error is true and the job fails, its status is failure so this won't be run"
         if: >
           success()
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "random"
-          content-template: "success after continue-on-error"
       - uses: ./
-        name: "failure after continue-on-error"
+        name: "if continue-on-error is true and the job fails, its status is failure so this will run"
         if: >
           failure()
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "random"
-          content-template: "failure after continue-on-error"
       - uses: ./
         name: "notifications on every execution with changing the author information"
         if: >
@@ -77,4 +73,4 @@ jobs:
           channel: "C0G4GS22F"
           author: "any-name-you-want"
           author-icon-emoji: ":ok:"
-          content-template: "this would always be shown"
+

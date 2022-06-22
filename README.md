@@ -52,9 +52,15 @@ You can customize the message icon, the username and the channel. Please check [
 
 ![images/customized.png](images/customized.png)
 
-### Turn off the defaul title
+### Disable several default contents
 
-tbw
+```yaml
+  - uses: jmatsu/notify-job-summary@v1
+    with:
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      show-default-title: false
+      show-runner-metadata: false
+```
 
 ### Additional content
 
@@ -79,7 +85,7 @@ The template engine is https://github.com/mde/ejs. Please check the latest optio
   - [job: JobOption](./src/job.ts)
   - [slack: SlackOption](./src/slack.ts)
 
-![images/sample-content-template.png](images/sample-content-template.png)
+![images/sample-content-template-file.png](images/sample-content-template-file.png)
 
 # Development & Contributions
 
