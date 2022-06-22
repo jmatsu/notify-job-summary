@@ -61,13 +61,16 @@ You can customize the message icon, the username and the channel and so on. Plea
 
 ### Disable several default contents
 
+For now, only `runner-metadata` can be turned off. For users who use several runners conditionally, runner information is valuable but not for others.
+
 ```yaml
   - uses: jmatsu/notify-job-summary@v1
     with:
       webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-      show-default-title: false
       show-runner-metadata: false
 ```
+
+![images/sample-content-template-file.png](images/sample-hide-elements.png)
 
 ### Additional content
 
