@@ -3,6 +3,7 @@ import {JobOption} from './job'
 import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
+import {RunnerOption} from './runner'
 
 export interface Payload {
   channel?: string
@@ -44,7 +45,7 @@ export const createPayload: (
   }
 
   const additionalContent = templateOption.content
-    ? await ejs.render(`\n${templateOption.content}`, templateOption.options, {
+    ? await ejs.render(`${templateOption.content}`, templateOption.options, {
         async: true
       })
     : ''
@@ -56,7 +57,7 @@ export const createPayload: (
         type: 'mrkdwn',
         text:
           `${jobStatusEmoji} GitHub Actions workflow *${githubOption.action.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId} *${additionalContent}`
+          `*${additionalContent}`
       }
     },
     {
@@ -64,14 +65,21 @@ export const createPayload: (
     },
     {
       type: 'context',
-      elements: [...githubOptionElements(githubOption)]
+      elements: jobContextParts(jobOption, githubOption)
     },
     {
       type: 'divider'
     },
     {
       type: 'context',
-      elements: [...jobOptionElements(jobOption)]
+      elements: actionContextParts(githubOption)
+    },
+    {
+      type: 'divider'
+    },
+    {
+      type: 'context',
+      elements: buildContextParts(githubOption, jobOption.runner)
     }
   ]
 
@@ -96,41 +104,56 @@ const contextPart: (key: string, value: unknown) => MarkdownBlock = (
   text: `*${key}* : ${value}`
 })
 
-const githubOptionElements = (option: GitHubOption): MarkdownBlock[] => {
+const jobContextParts = (
+  job: JobOption,
+  github: GitHubOption
+): MarkdownBlock[] => {
+  return [
+    contextPart('job-id', job.id),
+    contextPart(
+      'run-url',
+      `https://github.com/${github.repoSlug}/actions/runs/${github.action.runId}`
+    )
+  ]
+}
+
+const actionContextParts = (github: GitHubOption): MarkdownBlock[] => {
   const blocks: MarkdownBlock[] = []
 
-  if (option.action.pullNumber) {
-    blocks.push(contextPart('pull-number', option.action.pullNumber))
+  if (github.action.actionName) {
+    blocks.push(contextPart('action-name', github.action.actionName))
   }
 
-  if (option.action.issueNumber) {
-    blocks.push(contextPart('issue-number', option.action.issueNumber))
+  if (github.action.pullNumber) {
+    blocks.push(contextPart('pull-number', github.action.pullNumber))
   }
 
-  if (option.action.actionName) {
-    blocks.push(contextPart('action-name', option.action.actionName))
+  if (github.action.issueNumber) {
+    blocks.push(contextPart('issue-number', github.action.issueNumber))
   }
 
-  if (option.action.targetWorkflowName) {
+  if (github.action.targetWorkflowName) {
     blocks.push(
-      contextPart('target-workflow-name', option.action.targetWorkflowName)
+      contextPart('target-workflow-name', github.action.targetWorkflowName)
     )
   }
 
   return [
-    contextPart('event', option.action.eventName),
-    contextPart('actor', option.action.actor),
-    contextPart('ref', option.ref),
-    contextPart('sha', option.sha),
+    contextPart('actor', github.action.actor),
+    contextPart('event', github.action.eventName),
     ...blocks
   ]
 }
 
-const jobOptionElements = (option: JobOption): MarkdownBlock[] => {
+const buildContextParts = (
+  github: GitHubOption,
+  runner: RunnerOption
+): MarkdownBlock[] => {
   return [
-    contextPart('job_id', option.id),
-    contextPart('arch', option.runner.arch),
-    contextPart('os', option.runner.os),
-    contextPart('runner-name', option.runner.name)
+    contextPart('ref', github.ref),
+    contextPart('sha', github.sha),
+    contextPart('arch', runner.arch),
+    contextPart('os', runner.os),
+    contextPart('runner-name', runner.name)
   ]
 }

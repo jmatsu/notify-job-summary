@@ -116,7 +116,7 @@ export const parseInputs: () => Inputs = () => {
   const githubOption: GitHubOption = {
     repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
     ref: ensurePresence(process.env.GITHUB_REF),
-    sha: ensurePresence(process.env.GITHUB_REF),
+    sha: ensurePresence(process.env.GITHUB_SHA),
     action: actionOption
   }
 

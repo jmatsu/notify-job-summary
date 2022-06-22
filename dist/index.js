@@ -122,7 +122,7 @@ const parseInputs = () => {
     const githubOption = {
         repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
         ref: ensurePresence(process.env.GITHUB_REF),
-        sha: ensurePresence(process.env.GITHUB_REF),
+        sha: ensurePresence(process.env.GITHUB_SHA),
         action: actionOption
     };
     return {
@@ -279,7 +279,7 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
         }
     }
     const additionalContent = templateOption.content
-        ? yield ejs.render(`\n${templateOption.content}`, templateOption.options, {
+        ? yield ejs.render(`${templateOption.content}`, templateOption.options, {
             async: true
         })
         : '';
@@ -289,7 +289,7 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
             text: {
                 type: 'mrkdwn',
                 text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.action.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-                    `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId} *${additionalContent}`
+                    `*${additionalContent}`
             }
         },
         {
@@ -297,15 +297,22 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
         },
         {
             type: 'context',
-            elements: [...githubOptionElements(githubOption)]
+            elements: jobContextParts(jobOption, githubOption)
         },
         {
             type: 'divider'
         },
         {
             type: 'context',
-            elements: [...jobOptionElements(jobOption)]
-        }
+            elements: actionContextParts(githubOption)
+        },
+        {
+            type: 'divider'
+        },
+        {
+            type: 'context',
+            elements: buildContextParts(githubOption, jobOption.runner)
+        },
     ];
     return {
         channel: slackOption.channel,
@@ -319,34 +326,39 @@ const contextPart = (key, value) => ({
     type: 'mrkdwn',
     text: `*${key}* : ${value}`
 });
-const githubOptionElements = (option) => {
+const jobContextParts = (job, github) => {
+    return [
+        contextPart('job-id', job.id),
+        contextPart('run-url', `https://github.com/${github.repoSlug}/actions/runs/${github.action.runId}`)
+    ];
+};
+const actionContextParts = (github) => {
     const blocks = [];
-    if (option.action.pullNumber) {
-        blocks.push(contextPart('pull-number', option.action.pullNumber));
+    if (github.action.actionName) {
+        blocks.push(contextPart('action-name', github.action.actionName));
     }
-    if (option.action.issueNumber) {
-        blocks.push(contextPart('issue-number', option.action.issueNumber));
+    if (github.action.pullNumber) {
+        blocks.push(contextPart('pull-number', github.action.pullNumber));
     }
-    if (option.action.actionName) {
-        blocks.push(contextPart('action-name', option.action.actionName));
+    if (github.action.issueNumber) {
+        blocks.push(contextPart('issue-number', github.action.issueNumber));
     }
-    if (option.action.targetWorkflowName) {
-        blocks.push(contextPart('target-workflow-name', option.action.targetWorkflowName));
+    if (github.action.targetWorkflowName) {
+        blocks.push(contextPart('target-workflow-name', github.action.targetWorkflowName));
     }
     return [
-        contextPart('event', option.action.eventName),
-        contextPart('actor', option.action.actor),
-        contextPart('ref', option.ref),
-        contextPart('sha', option.sha),
+        contextPart('actor', github.action.actor),
+        contextPart('event', github.action.eventName),
         ...blocks
     ];
 };
-const jobOptionElements = (option) => {
+const buildContextParts = (github, runner) => {
     return [
-        contextPart('job_id', option.id),
-        contextPart('arch', option.runner.arch),
-        contextPart('os', option.runner.os),
-        contextPart('runner-name', option.runner.name)
+        contextPart('ref', github.ref),
+        contextPart('sha', github.sha),
+        contextPart('arch', runner.arch),
+        contextPart('os', runner.os),
+        contextPart('runner-name', runner.name)
     ];
 };
 
