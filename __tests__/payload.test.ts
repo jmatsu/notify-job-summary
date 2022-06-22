@@ -22,7 +22,7 @@ const jobOption: JobOption = {
 const slackOption: SlackOption = {
   webhookURL: 'webhook url',
   channel: 'channel id or name',
-  author: 'notifier name',
+  authorName: 'notifier name',
   authorIconEmoji: ':emoji:'
 }
 
@@ -41,9 +41,6 @@ const githubOption: GitHubOption = {
 }
 
 const templateOption: TemplateOption = {
-  default: {
-    showTitle: true
-  },
   content: undefined,
   options: {
     job: jobOption,
@@ -90,38 +87,6 @@ test('attributes should match', async () => {
   expect(stringified).toContain(
     'https://github.com/fake orgName/repoName/actions/runs/fake 12345'
   )
-  expect(stringified).toContain('You can check the details') // from the default title
-  expect(stringified).toContain(githubOption.repoSlug)
-  expect(stringified).toContain(actionOption.actor)
-  expect(stringified).toContain(githubOption.ref)
-  expect(stringified).toContain(githubOption.sha)
-
-  expect(stringified).toContain(runnerOption.arch)
-  expect(stringified).toContain(runnerOption.os)
-  expect(stringified).toContain(runnerOption.name)
-})
-
-test('attributes should match if default option is disabled', async () => {
-  const payload = await createPayload(jobOption, slackOption, githubOption, {
-    ...templateOption,
-    default: {
-      showTitle: false
-    }
-  })
-
-  expect(payload.channel).toEqual('channel id or name')
-  expect(payload.username).toEqual('notifier name')
-  expect(payload.icon_emoji).toEqual(':emoji:')
-
-  const stringified = JSON.stringify(payload.blocks)
-
-  expect(stringified).toContain(jobOption.id)
-  expect(stringified).toContain(actionOption.workflowName)
-  expect(stringified).toContain(actionOption.eventName)
-  expect(stringified).toContain(
-    'https://github.com/fake orgName/repoName/actions/runs/fake 12345'
-  )
-  expect(stringified).not.toContain('You can check the details') // from the default title
   expect(stringified).toContain(githubOption.repoSlug)
   expect(stringified).toContain(actionOption.actor)
   expect(stringified).toContain(githubOption.ref)

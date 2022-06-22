@@ -15,10 +15,10 @@ inputs:
     required: false
     default: ''
     description: "The channel id or name to notify. Use the default channel unless specified."
-  author:
+  author-name:
     required: false
     default: github-actions
-    description: "The message author"
+    description: "The message author name"
   author-icon-emoji:
     required: false
     default: ""
@@ -31,10 +31,6 @@ inputs:
     required: false
     default: ""
     description: "a path to mds/ejs template to add the additional markdown content. Either one of this and content-template can be specified."
-  show-default-title:
-    required: false
-    default: "true"
-    description: "show the title of the default message. workflow name, repo slug, job status will be added to metadata instead if turned off."
   show-runner-metadata:
     required: false
     default: "true"

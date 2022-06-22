@@ -42,7 +42,7 @@ const parseInputs = () => {
         required: false,
         trimWhitespace: true
     });
-    const author = core.getInput('author', {
+    const authorName = core.getInput('author-name', {
         required: false,
         trimWhitespace: true
     });
@@ -50,10 +50,6 @@ const parseInputs = () => {
         required: false,
         trimWhitespace: true
     });
-    const showDefaultTitle = parseBoolean(core.getInput('show-default-title', {
-        required: false,
-        trimWhitespace: true
-    }));
     const showRunnerMetadata = parseBoolean(core.getInput('show-runner-metadata', {
         required: false,
         trimWhitespace: true
@@ -96,7 +92,7 @@ const parseInputs = () => {
     const slackOption = {
         webhookURL,
         channel: channel || undefined,
-        author: author || undefined,
+        authorName: authorName || undefined,
         authorIconEmoji: authorIconEmoji || undefined
     };
     const actionOption = {
@@ -140,9 +136,6 @@ const parseInputs = () => {
         slackOption,
         githubOption,
         templateOption: {
-            default: {
-                showTitle: showDefaultTitle
-            },
             content: contentTemplate,
             options: {
                 job: jobOption,
@@ -285,33 +278,28 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
         contextPart('workflow-name', githubOption.action.workflowName)
     ];
     const sectionText = [];
-    if (templateOption.default.showTitle) {
-        let jobStatusEmoji = '';
-        switch (jobOption.status) {
-            case 'success': {
-                jobStatusEmoji = ':white_check_mark:';
-                break;
-            }
-            case 'failure': {
-                jobStatusEmoji = ':no_entry_sign:';
-                break;
-            }
-            case 'cancelled': {
-                jobStatusEmoji = ':warning:';
-                break;
-            }
-            default: {
-                // no-op
-                break;
-            }
+    let jobStatusEmoji = '';
+    switch (jobOption.status) {
+        case 'success': {
+            jobStatusEmoji = ':white_check_mark:';
+            break;
         }
-        sectionText.push(`${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`);
-        sectionText.push('\n');
-        sectionText.push(`You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`);
+        case 'failure': {
+            jobStatusEmoji = ':no_entry_sign:';
+            break;
+        }
+        case 'cancelled': {
+            jobStatusEmoji = ':warning:';
+            break;
+        }
+        default: {
+            // no-op
+            break;
+        }
     }
-    else {
-        metadata.push(...alternativeTitleContextParts(jobOption, githubOption));
-    }
+    sectionText.push(`${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`);
+    sectionText.push('\n');
+    sectionText.push(`You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`);
     if (templateOption.content) {
         sectionText.push(yield ejs.render(`${templateOption.content}`, templateOption.options, {
             async: true
@@ -339,7 +327,7 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
     ];
     return {
         channel: slackOption.channel,
-        username: slackOption.author,
+        username: slackOption.authorName,
         icon_emoji: slackOption.authorIconEmoji,
         blocks
     };
@@ -349,14 +337,6 @@ const contextPart = (key, value) => ({
     type: 'mrkdwn',
     text: `*${key}* : ${value}`
 });
-const alternativeTitleContextParts = (job, github) => {
-    return [
-        contextPart('repo', github.repoSlug),
-        contextPart('job-id', job.id),
-        contextPart('job-status', job.status),
-        contextPart('run-url', `https://github.com/${github.repoSlug}/actions/runs/${github.action.runId}`)
-    ];
-};
 const actionContextParts = (github) => {
     const blocks = [];
     if (github.action.actionName) {

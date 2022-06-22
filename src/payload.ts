@@ -29,38 +29,35 @@ export const createPayload: (
 
   const sectionText = []
 
-  if (templateOption.default.showTitle) {
-    let jobStatusEmoji = ''
+  let jobStatusEmoji = ''
 
-    switch (jobOption.status) {
-      case 'success': {
-        jobStatusEmoji = ':white_check_mark:'
-        break
-      }
-      case 'failure': {
-        jobStatusEmoji = ':no_entry_sign:'
-        break
-      }
-      case 'cancelled': {
-        jobStatusEmoji = ':warning:'
-        break
-      }
-      default: {
-        // no-op
-        break
-      }
+  switch (jobOption.status) {
+    case 'success': {
+      jobStatusEmoji = ':white_check_mark:'
+      break
     }
-
-    sectionText.push(
-      `${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
-    )
-    sectionText.push('\n')
-    sectionText.push(
-      `You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`
-    )
-  } else {
-    metadata.push(...alternativeTitleContextParts(jobOption, githubOption))
+    case 'failure': {
+      jobStatusEmoji = ':no_entry_sign:'
+      break
+    }
+    case 'cancelled': {
+      jobStatusEmoji = ':warning:'
+      break
+    }
+    default: {
+      // no-op
+      break
+    }
   }
+
+  sectionText.push(
+    `${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
+  )
+
+  sectionText.push('\n')
+  sectionText.push(
+    `You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`
+  )
 
   if (templateOption.content) {
     sectionText.push(
@@ -93,7 +90,7 @@ export const createPayload: (
 
   return {
     channel: slackOption.channel,
-    username: slackOption.author,
+    username: slackOption.authorName,
     icon_emoji: slackOption.authorIconEmoji,
     blocks
   }
@@ -111,21 +108,6 @@ const contextPart: (key: string, value: unknown) => MarkdownBlock = (
   type: 'mrkdwn',
   text: `*${key}* : ${value}`
 })
-
-const alternativeTitleContextParts = (
-  job: JobOption,
-  github: GitHubOption
-): MarkdownBlock[] => {
-  return [
-    contextPart('repo', github.repoSlug),
-    contextPart('job-id', job.id),
-    contextPart('job-status', job.status),
-    contextPart(
-      'run-url',
-      `https://github.com/${github.repoSlug}/actions/runs/${github.action.runId}`
-    )
-  ]
-}
 
 const actionContextParts = (github: GitHubOption): MarkdownBlock[] => {
   const blocks: MarkdownBlock[] = []

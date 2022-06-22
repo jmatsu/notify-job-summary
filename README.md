@@ -45,9 +45,19 @@ jobs:
 
 ## Customization
 
-You can customize the message icon, the username and the channel. Please check [action.yml](./action.yml) for the inputs and/or outputs.
+You can customize the message icon, the username and the channel and so on. Please check [action.yml](./action.yml) for the inputs and/or outputs.
 
-![images/customized.png](images/customized.png)
+### Change the icon and the username
+
+```yaml
+  - uses: jmatsu/notify-job-summary@v1
+    with:
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      author-name: "any-name-you-want"
+      author-icon-emoji: ":ok:"
+```
+
+![images/sample-customized.png](images/sample-customized.png)
 
 ### Disable several default contents
 
@@ -73,6 +83,8 @@ You can customize the message icon, the username and the channel. Please check [
       Hello world. You can embed the variables by <%= "here would be evaliated" %>.
 ```
 
+![images/sample-content-template-file.png](images/sample-content-template-file.png)
+
 The template engine is https://github.com/mde/ejs. Please check the latest options in [./src/template.ts](./src/template.ts) and [./src/payload.ts](./src/payload.ts).
 
 - `<%= content to be evaluated %>`
@@ -81,8 +93,6 @@ The template engine is https://github.com/mde/ejs. Please check the latest optio
   - [github: GitHubOption](./src/github.ts)
   - [job: JobOption](./src/job.ts)
   - [slack: SlackOption](./src/slack.ts)
-
-![images/sample-content-template-file.png](images/sample-content-template-file.png)
 
 # Development & Contributions
 

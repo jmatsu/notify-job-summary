@@ -73,6 +73,6 @@ jobs:
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "C0G4GS22F"
-          author: "any-name-you-want"
+          author-name: "any-name-you-want"
           author-icon-emoji: ":ok:"
 

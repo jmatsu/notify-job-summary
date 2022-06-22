@@ -22,7 +22,7 @@ export const parseInputs: () => Inputs = () => {
     required: false,
     trimWhitespace: true
   })
-  const author = core.getInput('author', {
+  const authorName = core.getInput('author-name', {
     required: false,
     trimWhitespace: true
   })
@@ -30,12 +30,6 @@ export const parseInputs: () => Inputs = () => {
     required: false,
     trimWhitespace: true
   })
-  const showDefaultTitle = parseBoolean(
-    core.getInput('show-default-title', {
-      required: false,
-      trimWhitespace: true
-    })
-  )
   const showRunnerMetadata = parseBoolean(
     core.getInput('show-runner-metadata', {
       required: false,
@@ -86,7 +80,7 @@ export const parseInputs: () => Inputs = () => {
   const slackOption: SlackOption = {
     webhookURL,
     channel: channel || undefined,
-    author: author || undefined,
+    authorName: authorName || undefined,
     authorIconEmoji: authorIconEmoji || undefined
   }
 
@@ -139,9 +133,6 @@ export const parseInputs: () => Inputs = () => {
     slackOption,
     githubOption,
     templateOption: {
-      default: {
-        showTitle: showDefaultTitle
-      },
       content: contentTemplate,
       options: {
         job: jobOption,
