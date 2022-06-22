@@ -4,6 +4,7 @@ import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
 import {RunnerOption} from './runner'
+import {GitHubActionOption} from './github_action'
 
 export interface Payload {
   channel?: string
@@ -16,12 +17,14 @@ export const createPayload: (
   jobOption: JobOption,
   slackOption: SlackOption,
   githubOption: GitHubOption,
+  actionOption: GitHubActionOption,
   runnerOption: RunnerOption,
   templateOption: TemplateOption
 ) => Promise<Payload> = async (
   jobOption,
   slackOption,
   githubOption,
+  actionOption,
   runnerOption,
   templateOption
 ) => {
@@ -58,8 +61,8 @@ export const createPayload: (
       text: {
         type: 'mrkdwn',
         text:
-          `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
+          `${jobStatusEmoji} GitHub Actions workflow *${actionOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
+          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${actionOption.runId} *${additionalContent}`
       }
     },
     {
@@ -70,11 +73,11 @@ export const createPayload: (
       elements: [
         {
           type: 'mrkdwn',
-          text: `*event* : ${githubOption.eventName}`
+          text: `*event* : ${actionOption.eventName}`
         },
         {
           type: 'mrkdwn',
-          text: `*actor* ${githubOption.actor}`
+          text: `*actor* ${actionOption.actor}`
         },
         {
           type: 'mrkdwn',

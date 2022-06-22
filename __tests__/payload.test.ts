@@ -5,6 +5,7 @@ import {JobOption} from '../src/job'
 import {SlackOption} from '../src/slack'
 import {GitHubOption} from '../src/github'
 import {RunnerOption} from '../src/runner'
+import {GitHubActionOption} from '../src/github_action'
 
 const jobOption: JobOption = {
   id: 'job id',
@@ -19,13 +20,16 @@ const slackOption: SlackOption = {
 }
 
 const githubOption: GitHubOption = {
+  repoSlug: 'fake orgName/repoName',
+  ref: 'refs/tag/fake',
+  sha: 'fake sha'
+}
+
+const actionOption: GitHubActionOption = {
   workflowName: 'super cool workflow',
   eventName: 'fake event name',
   runId: 'fake 12345',
-  repoSlug: 'fake orgName/repoName',
-  actor: 'fake workflow actor',
-  ref: 'refs/tag/fake',
-  sha: 'fake sha'
+  actor: 'fake workflow actor'
 }
 
 const runnerOption: RunnerOption = {
@@ -40,6 +44,7 @@ const templateOption: TemplateOption = {
     jobOption,
     slackOption,
     githubOption,
+    actionOption,
     runnerOption
   }
 }
@@ -54,6 +59,7 @@ test('do not expose secrets', async () => {
       channel: 'do not expose'
     },
     githubOption,
+    actionOption,
     runnerOption,
     templateOption
   )
@@ -68,6 +74,7 @@ test('attributes should match', async () => {
     jobOption,
     slackOption,
     githubOption,
+    actionOption,
     runnerOption,
     templateOption
   )
@@ -79,13 +86,13 @@ test('attributes should match', async () => {
   const stringified = JSON.stringify(payload.blocks)
 
   expect(stringified).toContain(jobOption.id)
-  expect(stringified).toContain(githubOption.workflowName)
-  expect(stringified).toContain(githubOption.eventName)
+  expect(stringified).toContain(actionOption.workflowName)
+  expect(stringified).toContain(actionOption.eventName)
   expect(stringified).toContain(
     'https://github.com/fake orgName/repoName/actions/runs/fake 12345'
   )
   expect(stringified).toContain(githubOption.repoSlug)
-  expect(stringified).toContain(githubOption.actor)
+  expect(stringified).toContain(actionOption.actor)
   expect(stringified).toContain(githubOption.ref)
   expect(stringified).toContain(githubOption.sha)
 
@@ -104,6 +111,7 @@ test('make sure job status is correctly reflected', async () => {
         },
         slackOption,
         githubOption,
+        actionOption,
         runnerOption,
         templateOption
       )
@@ -118,6 +126,7 @@ test('make sure job status is correctly reflected', async () => {
         },
         slackOption,
         githubOption,
+        actionOption,
         runnerOption,
         templateOption
       )
@@ -132,6 +141,7 @@ test('make sure job status is correctly reflected', async () => {
         },
         slackOption,
         githubOption,
+        actionOption,
         runnerOption,
         templateOption
       )
@@ -144,6 +154,7 @@ test('attributes should match', async () => {
     jobOption,
     slackOption,
     githubOption,
+    actionOption,
     runnerOption,
     templateOption
   )
@@ -155,13 +166,13 @@ test('attributes should match', async () => {
   const stringified = JSON.stringify(payload.blocks)
 
   expect(stringified).toContain(jobOption.id)
-  expect(stringified).toContain(githubOption.workflowName)
-  expect(stringified).toContain(githubOption.eventName)
+  expect(stringified).toContain(actionOption.workflowName)
+  expect(stringified).toContain(actionOption.eventName)
   expect(stringified).toContain(
     'https://github.com/fake orgName/repoName/actions/runs/fake 12345'
   )
   expect(stringified).toContain(githubOption.repoSlug)
-  expect(stringified).toContain(githubOption.actor)
+  expect(stringified).toContain(actionOption.actor)
   expect(stringified).toContain(githubOption.ref)
   expect(stringified).toContain(githubOption.sha)
 })
@@ -176,6 +187,7 @@ test('make sure template has rendered', async () => {
         },
         slackOption,
         githubOption,
+        actionOption,
         runnerOption,
         {
           ...templateOption,

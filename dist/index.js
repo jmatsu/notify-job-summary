@@ -85,13 +85,15 @@ const parseInputs = () => {
         authorIconEmoji: authorIconEmoji || undefined
     };
     const githubOption = {
+        repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
+        ref: ensurePresence(process.env.GITHUB_REF),
+        sha: ensurePresence(process.env.GITHUB_REF)
+    };
+    const actionOption = {
         workflowName: ensurePresence(process.env.GITHUB_WORKFLOW),
         eventName: ensurePresence(process.env.GITHUB_EVENT_NAME),
         runId: ensurePresence(process.env.GITHUB_RUN_ID),
-        repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
-        actor: ensurePresence(process.env.GITHUB_ACTOR),
-        ref: ensurePresence(process.env.GITHUB_REF),
-        sha: ensurePresence(process.env.GITHUB_REF)
+        actor: ensurePresence(process.env.GITHUB_ACTOR)
     };
     const runnerOption = {
         arch: ensurePresence(process.env.RUNNER_ARCH),
@@ -102,6 +104,7 @@ const parseInputs = () => {
         jobOption,
         slackOption,
         githubOption,
+        actionOption,
         runnerOption,
         templateOption: {
             content: contentTemplate,
@@ -109,6 +112,7 @@ const parseInputs = () => {
                 jobOption,
                 slackOption,
                 githubOption,
+                actionOption,
                 runnerOption
             }
         }
@@ -171,8 +175,8 @@ const payload_1 = __nccwpck_require__(995);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { jobOption, slackOption, githubOption, runnerOption, templateOption } = (0, inputs_1.parseInputs)();
-            const payload = yield (0, payload_1.createPayload)(jobOption, slackOption, githubOption, runnerOption, templateOption);
+            const { jobOption, slackOption, githubOption, actionOption, runnerOption, templateOption } = (0, inputs_1.parseInputs)();
+            const payload = yield (0, payload_1.createPayload)(jobOption, slackOption, githubOption, actionOption, runnerOption, templateOption);
             const client = new http_client_1.HttpClient('notify-job-summary');
             const response = yield client.post(slackOption.webhookURL, JSON.stringify(payload));
             const responseBody = yield response.readBody();
@@ -233,7 +237,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPayload = void 0;
 const ejs = __importStar(__nccwpck_require__(431));
-const createPayload = (jobOption, slackOption, githubOption, runnerOption, templateOption) => __awaiter(void 0, void 0, void 0, function* () {
+const createPayload = (jobOption, slackOption, githubOption, actionOption, runnerOption, templateOption) => __awaiter(void 0, void 0, void 0, function* () {
     let jobStatusEmoji = '';
     switch (jobOption.status) {
         case 'success': {
@@ -263,8 +267,8 @@ const createPayload = (jobOption, slackOption, githubOption, runnerOption, templ
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-                    `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
+                text: `${jobStatusEmoji} GitHub Actions workflow *${actionOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
+                    `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${actionOption.runId} *${additionalContent}`
             }
         },
         {
@@ -275,11 +279,11 @@ const createPayload = (jobOption, slackOption, githubOption, runnerOption, templ
             elements: [
                 {
                     type: 'mrkdwn',
-                    text: `*event* : ${githubOption.eventName}`
+                    text: `*event* : ${actionOption.eventName}`
                 },
                 {
                     type: 'mrkdwn',
-                    text: `*actor* ${githubOption.actor}`
+                    text: `*actor* ${actionOption.actor}`
                 },
                 {
                     type: 'mrkdwn',

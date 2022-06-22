@@ -5,11 +5,13 @@ import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
 import {RunnerOption} from './runner'
+import {GitHubActionOption} from './github_action'
 
 export interface Inputs {
   jobOption: JobOption
   slackOption: SlackOption
   githubOption: GitHubOption
+  actionOption: GitHubActionOption
   templateOption: TemplateOption
   runnerOption: RunnerOption
 }
@@ -73,13 +75,16 @@ export const parseInputs: () => Inputs = () => {
   }
 
   const githubOption = {
+    repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
+    ref: ensurePresence(process.env.GITHUB_REF),
+    sha: ensurePresence(process.env.GITHUB_REF)
+  }
+
+  const actionOption = {
     workflowName: ensurePresence(process.env.GITHUB_WORKFLOW),
     eventName: ensurePresence(process.env.GITHUB_EVENT_NAME),
     runId: ensurePresence(process.env.GITHUB_RUN_ID),
-    repoSlug: ensurePresence(process.env.GITHUB_REPOSITORY),
-    actor: ensurePresence(process.env.GITHUB_ACTOR),
-    ref: ensurePresence(process.env.GITHUB_REF),
-    sha: ensurePresence(process.env.GITHUB_REF)
+    actor: ensurePresence(process.env.GITHUB_ACTOR)
   }
 
   const runnerOption = {
@@ -92,6 +97,7 @@ export const parseInputs: () => Inputs = () => {
     jobOption,
     slackOption,
     githubOption,
+    actionOption,
     runnerOption,
     templateOption: {
       content: contentTemplate,
@@ -99,6 +105,7 @@ export const parseInputs: () => Inputs = () => {
         jobOption,
         slackOption,
         githubOption,
+        actionOption,
         runnerOption
       }
     }
