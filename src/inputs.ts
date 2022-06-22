@@ -4,12 +4,14 @@ import {JobOption} from './job'
 import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
+import {RunnerOption} from './runner'
 
 export interface Inputs {
   jobOption: JobOption
   slackOption: SlackOption
   githubOption: GitHubOption
   templateOption: TemplateOption
+  runnerOption: RunnerOption
 }
 
 export const parseInputs: () => Inputs = () => {
@@ -80,16 +82,24 @@ export const parseInputs: () => Inputs = () => {
     sha: ensurePresence(process.env.GITHUB_REF)
   }
 
+  const runnerOption = {
+    arch: ensurePresence(process.env.RUNNER_ARCH),
+    name: ensurePresence(process.env.RUNNER_NAME),
+    os: ensurePresence(process.env.RUNNER_OS)
+  }
+
   return {
     jobOption,
     slackOption,
     githubOption,
+    runnerOption,
     templateOption: {
       content: contentTemplate,
       options: {
         jobOption,
         slackOption,
-        githubOption
+        githubOption,
+        runnerOption
       }
     }
   }

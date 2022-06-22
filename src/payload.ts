@@ -3,6 +3,7 @@ import {JobOption} from './job'
 import {SlackOption} from './slack'
 import {GitHubOption} from './github'
 import {TemplateOption} from './template'
+import {RunnerOption} from './runner'
 
 export interface Payload {
   channel?: string
@@ -15,11 +16,13 @@ export const createPayload: (
   jobOption: JobOption,
   slackOption: SlackOption,
   githubOption: GitHubOption,
+  runnerOption: RunnerOption,
   templateOption: TemplateOption
 ) => Promise<Payload> = async (
   jobOption,
   slackOption,
   githubOption,
+  runnerOption,
   templateOption
 ) => {
   let jobStatusEmoji = ''
@@ -84,6 +87,18 @@ export const createPayload: (
         {
           type: 'mrkdwn',
           text: `*job_id* ${jobOption.id}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*arch* ${runnerOption.arch}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*os* ${runnerOption.os}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*runner_name* ${runnerOption.name}`
         }
       ]
     }

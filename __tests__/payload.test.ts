@@ -4,6 +4,7 @@ import {TemplateOption} from '../src/template'
 import {JobOption} from '../src/job'
 import {SlackOption} from '../src/slack'
 import {GitHubOption} from '../src/github'
+import {RunnerOption} from '../src/runner'
 
 const jobOption: JobOption = {
   id: 'job id',
@@ -27,12 +28,19 @@ const githubOption: GitHubOption = {
   sha: 'fake sha'
 }
 
+const runnerOption: RunnerOption = {
+  arch: 'x86',
+  name: 'self-host',
+  os: 'Linux'
+}
+
 const templateOption: TemplateOption = {
   content: undefined,
   options: {
     jobOption,
     slackOption,
-    githubOption
+    githubOption,
+    runnerOption
   }
 }
 
@@ -46,6 +54,7 @@ test('do not expose secrets', async () => {
       channel: 'do not expose'
     },
     githubOption,
+    runnerOption,
     templateOption
   )
 
@@ -59,6 +68,7 @@ test('attributes should match', async () => {
     jobOption,
     slackOption,
     githubOption,
+    runnerOption,
     templateOption
   )
 
@@ -78,6 +88,10 @@ test('attributes should match', async () => {
   expect(stringified).toContain(githubOption.actor)
   expect(stringified).toContain(githubOption.ref)
   expect(stringified).toContain(githubOption.sha)
+
+  expect(stringified).toContain(runnerOption.arch)
+  expect(stringified).toContain(runnerOption.os)
+  expect(stringified).toContain(runnerOption.name)
 })
 
 test('make sure job status is correctly reflected', async () => {
@@ -90,6 +104,7 @@ test('make sure job status is correctly reflected', async () => {
         },
         slackOption,
         githubOption,
+        runnerOption,
         templateOption
       )
     )
@@ -103,6 +118,7 @@ test('make sure job status is correctly reflected', async () => {
         },
         slackOption,
         githubOption,
+        runnerOption,
         templateOption
       )
     )
@@ -116,6 +132,7 @@ test('make sure job status is correctly reflected', async () => {
         },
         slackOption,
         githubOption,
+        runnerOption,
         templateOption
       )
     )
@@ -127,6 +144,7 @@ test('attributes should match', async () => {
     jobOption,
     slackOption,
     githubOption,
+    runnerOption,
     templateOption
   )
 
@@ -158,6 +176,7 @@ test('make sure template has rendered', async () => {
         },
         slackOption,
         githubOption,
+        runnerOption,
         {
           ...templateOption,
           content: 'rendered <%= jobOption.id %>'
