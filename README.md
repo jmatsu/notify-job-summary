@@ -13,7 +13,7 @@ This GitHub Action notifies the job summary to Slack via the incoming webhook.
 - 2. Configure this action in your workflows.
 - 3. That's it.
 
-*Please ask Slack team about how to create webhooks and/or which parameters are customizable by spec.*
+*Please ask Slack team about how to create webhooks*
 
 # Usage
 
