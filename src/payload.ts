@@ -54,6 +54,7 @@ export const createPayload: (
     sectionText.push(
       `${jobStatusEmoji} GitHub Actions workflow *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
     )
+    sectionText.push('\n')
     sectionText.push(
       `You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`
     )

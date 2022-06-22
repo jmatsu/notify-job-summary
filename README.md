@@ -6,9 +6,20 @@ This GitHub Action notifies the job summary to Slack via the incoming webhook.
 
 > If you would like to get the notification for the workflow rather than jobs, `workflow_run` event is what you want.
 
+# Instructions
+
+- 1. Create an incoming webhook.
+  - https://api.slack.com/messaging/webhooks
+- 2. Configure this action in your workflows.
+- 3. That's it.
+
+*Please ask Slack team about how to create webhooks and/or which parameters are customizable by spec.*
+
 # Usage
 
-You can get alerts and/or intermediate reports from GitHub Actions by using this action. Basically, you need to combine `if` expression and the step position where defines this action. 
+You can get alerts and/or intermediate reports from GitHub Actions by using this action. If this action is the last action in the job, then this will notify the conclusion result to your Slack. Otherwise, so you insert this action as the intermediate step, this action will let you know the progress of the job. 
+
+For better experiences, you have to combine `if` expression and the step position where defines this action basically. 
 
 For example, you can get notifications if a previous step fails and the job becomes `failure` in conclusion.
 
@@ -30,13 +41,20 @@ jobs:
 # EOF
 ```
 
-This action will let you know the progress of the job if you insert this action into the middle of the steps. Please refer to https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions for the status function.
+ Please refer to the following links for the status function and more. Please be careful the condition is more complex if you are using `continue-on-error: true` in the job.
+
+- https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
+- https://docs.github.com/en/actions/learn-github-actions/contexts#steps-context
 
 ## Customization
 
 You can customize the message icon, the username and the channel. Please check [action.yml](./action.yml) for the inputs and/or outputs.
 
 ![images/customized.png](images/customized.png)
+
+### Turn off the defaul title
+
+tbw
 
 ### Additional content
 
@@ -62,15 +80,6 @@ The template engine is https://github.com/mde/ejs. Please check the latest optio
   - [slackOption: SlackOption](./src/slack.ts)
 
 ![images/sample-content-template.png](images/sample-content-template.png)
-
-# Instructions
-
-- 1. Create an incoming webhook.
-  - https://api.slack.com/messaging/webhooks
-- 2. Configure this action in your workflows.
-- 3. That's it.
-
-*Please ask Slack team about how to create webhooks and/or which parameters are customizable by spec.*
 
 # Development & Contributions
 
