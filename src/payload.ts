@@ -52,7 +52,7 @@ export const createPayload: (
     }
 
     sectionText.push(
-      `${jobStatusEmoji} GitHub Actions workflow *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
+      `${jobStatusEmoji} Job *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
     )
     sectionText.push('\n')
     sectionText.push(
