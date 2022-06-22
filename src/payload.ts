@@ -1,4 +1,8 @@
-import {GitHubOption, JobOption, SlackOption} from './inputs'
+import * as ejs from 'ejs'
+import {JobOption} from './job'
+import {SlackOption} from './slack'
+import {GitHubOption} from './github'
+import {TemplateOption} from './template'
 
 export interface Payload {
   channel?: string
@@ -10,8 +14,14 @@ export interface Payload {
 export const createPayload: (
   jobOption: JobOption,
   slackOption: SlackOption,
-  githubOption: GitHubOption
-) => Payload = (jobOption, slackOption, githubOption) => {
+  githubOption: GitHubOption,
+  templateOption: TemplateOption
+) => Promise<Payload> = async (
+  jobOption,
+  slackOption,
+  githubOption,
+  templateOption
+) => {
   let jobStatusEmoji = ''
 
   switch (jobOption.status) {
@@ -33,12 +43,20 @@ export const createPayload: (
     }
   }
 
+  const additionalContent = templateOption.content
+    ? await ejs.render(`\n${templateOption.content}`, templateOption.options, {
+        async: true
+      })
+    : ''
+
   const blocks = [
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*. \n\n *You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *`
+        text:
+          `${jobStatusEmoji} GitHub Actions workflow *${githubOption.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
+          `*You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.runId} *${additionalContent}`
       }
     },
     {
