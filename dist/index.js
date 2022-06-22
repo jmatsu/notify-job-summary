@@ -50,6 +50,14 @@ const parseInputs = () => {
         required: false,
         trimWhitespace: true
     });
+    const showDefaultTitle = parseBoolean(core.getInput('show-default-title', {
+        required: false,
+        trimWhitespace: true
+    }));
+    const showRunnerMetadata = parseBoolean(core.getInput('show-runner-metadata', {
+        required: false,
+        trimWhitespace: true
+    }));
     const jobStatus = core.getInput('job-status', {
         required: true,
         trimWhitespace: true
@@ -77,11 +85,13 @@ const parseInputs = () => {
     const jobOption = {
         id: ensurePresence(process.env.GITHUB_JOB),
         status: jobStatus,
-        runner: {
-            arch: ensurePresence(process.env.RUNNER_ARCH),
-            name: ensurePresence(process.env.RUNNER_NAME),
-            os: ensurePresence(process.env.RUNNER_OS)
-        }
+        runner: showRunnerMetadata
+            ? {
+                arch: ensurePresence(process.env.RUNNER_ARCH),
+                name: ensurePresence(process.env.RUNNER_NAME),
+                os: ensurePresence(process.env.RUNNER_OS)
+            }
+            : undefined
     };
     const slackOption = {
         webhookURL,
@@ -130,6 +140,9 @@ const parseInputs = () => {
         slackOption,
         githubOption,
         templateOption: {
+            default: {
+                showTitle: showDefaultTitle
+            },
             content: contentTemplate,
             options: {
                 job: jobOption,
@@ -145,6 +158,15 @@ const ensurePresence = (v) => {
         throw new Error('unexpected non-presence value is detected');
     }
     return v;
+};
+const parseBoolean = (v) => {
+    // https://docs.github.com/en/actions/learn-github-actions/expressions
+    if (!v || v === '' || v === '0' || v === 'false') {
+        return false;
+    }
+    else {
+        return true;
+    }
 };
 
 
@@ -259,37 +281,47 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPayload = void 0;
 const ejs = __importStar(__nccwpck_require__(431));
 const createPayload = (jobOption, slackOption, githubOption, templateOption) => __awaiter(void 0, void 0, void 0, function* () {
-    let jobStatusEmoji = '';
-    switch (jobOption.status) {
-        case 'success': {
-            jobStatusEmoji = ':white_check_mark:';
-            break;
+    const metadata = [
+        contextPart('workflow-name', githubOption.action.workflowName)
+    ];
+    const sectionText = [];
+    if (templateOption.default.showTitle) {
+        let jobStatusEmoji = '';
+        switch (jobOption.status) {
+            case 'success': {
+                jobStatusEmoji = ':white_check_mark:';
+                break;
+            }
+            case 'failure': {
+                jobStatusEmoji = ':no_entry_sign:';
+                break;
+            }
+            case 'cancelled': {
+                jobStatusEmoji = ':warning:';
+                break;
+            }
+            default: {
+                // no-op
+                break;
+            }
         }
-        case 'failure': {
-            jobStatusEmoji = ':no_entry_sign:';
-            break;
-        }
-        case 'cancelled': {
-            jobStatusEmoji = ':warning:';
-            break;
-        }
-        default: {
-            // no-op
-            break;
-        }
+        sectionText.push(`${jobStatusEmoji} GitHub Actions workflow *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`);
+        sectionText.push(`You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`);
     }
-    const additionalContent = templateOption.content
-        ? yield ejs.render(`${templateOption.content}`, templateOption.options, {
+    else {
+        metadata.push(...alternativeTitleContextParts(jobOption, githubOption));
+    }
+    if (templateOption.content) {
+        sectionText.push(yield ejs.render(`${templateOption.content}`, templateOption.options, {
             async: true
-        })
-        : '';
+        }));
+    }
     const blocks = [
         {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `${jobStatusEmoji} GitHub Actions workflow *${githubOption.action.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-                    `*${additionalContent}`
+                text: sectionText.join('\n')
             }
         },
         {
@@ -297,22 +329,12 @@ const createPayload = (jobOption, slackOption, githubOption, templateOption) => 
         },
         {
             type: 'context',
-            elements: jobContextParts(jobOption, githubOption)
-        },
-        {
-            type: 'divider'
-        },
-        {
-            type: 'context',
-            elements: actionContextParts(githubOption)
-        },
-        {
-            type: 'divider'
-        },
-        {
-            type: 'context',
-            elements: buildContextParts(githubOption, jobOption.runner)
-        },
+            elements: [
+                ...metadata,
+                ...actionContextParts(githubOption),
+                ...buildContextParts(githubOption, jobOption.runner)
+            ]
+        }
     ];
     return {
         channel: slackOption.channel,
@@ -326,9 +348,11 @@ const contextPart = (key, value) => ({
     type: 'mrkdwn',
     text: `*${key}* : ${value}`
 });
-const jobContextParts = (job, github) => {
+const alternativeTitleContextParts = (job, github) => {
     return [
+        contextPart('repo', github.repoSlug),
         contextPart('job-id', job.id),
+        contextPart('job-status', job.status),
         contextPart('run-url', `https://github.com/${github.repoSlug}/actions/runs/${github.action.runId}`)
     ];
 };
@@ -353,12 +377,16 @@ const actionContextParts = (github) => {
     ];
 };
 const buildContextParts = (github, runner) => {
+    const blocks = [];
+    if (runner) {
+        blocks.push(contextPart('arch', runner.arch));
+        blocks.push(contextPart('os', runner.os));
+        blocks.push(contextPart('runner-name', runner.name));
+    }
     return [
         contextPart('ref', github.ref),
         contextPart('sha', github.sha),
-        contextPart('arch', runner.arch),
-        contextPart('os', runner.os),
-        contextPart('runner-name', runner.name)
+        ...blocks
     ];
 };
 

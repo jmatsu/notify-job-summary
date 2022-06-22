@@ -30,6 +30,18 @@ export const parseInputs: () => Inputs = () => {
     required: false,
     trimWhitespace: true
   })
+  const showDefaultTitle = parseBoolean(
+    core.getInput('show-default-title', {
+      required: false,
+      trimWhitespace: true
+    })
+  )
+  const showRunnerMetadata = parseBoolean(
+    core.getInput('show-runner-metadata', {
+      required: false,
+      trimWhitespace: true
+    })
+  )
   const jobStatus = core.getInput('job-status', {
     required: true,
     trimWhitespace: true
@@ -62,11 +74,13 @@ export const parseInputs: () => Inputs = () => {
   const jobOption: JobOption = {
     id: ensurePresence(process.env.GITHUB_JOB),
     status: jobStatus,
-    runner: {
-      arch: ensurePresence(process.env.RUNNER_ARCH),
-      name: ensurePresence(process.env.RUNNER_NAME),
-      os: ensurePresence(process.env.RUNNER_OS)
-    }
+    runner: showRunnerMetadata
+      ? {
+          arch: ensurePresence(process.env.RUNNER_ARCH),
+          name: ensurePresence(process.env.RUNNER_NAME),
+          os: ensurePresence(process.env.RUNNER_OS)
+        }
+      : undefined
   }
 
   const slackOption: SlackOption = {
@@ -125,6 +139,9 @@ export const parseInputs: () => Inputs = () => {
     slackOption,
     githubOption,
     templateOption: {
+      default: {
+        showTitle: showDefaultTitle
+      },
       content: contentTemplate,
       options: {
         job: jobOption,
@@ -143,4 +160,15 @@ const ensurePresence: (v: string | undefined) => string = (
   }
 
   return v
+}
+
+const parseBoolean: (v: string | undefined) => boolean = (
+  v: string | undefined
+) => {
+  // https://docs.github.com/en/actions/learn-github-actions/expressions
+  if (!v || v === '' || v === '0' || v === 'false') {
+    return false
+  } else {
+    return true
+  }
 }

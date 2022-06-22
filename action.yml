@@ -31,6 +31,14 @@ inputs:
     required: false
     default: ""
     description: "a path to mds/ejs template to add the additional markdown content. Either one of this and content-template can be specified."
+  show-default-title:
+    required: false
+    default: "true"
+    description: "show the title of the default message. workflow name, repo slug, job status will be added to metadata instead if turned off."
+  show-runner-metadata:
+    required: false
+    default: "true"
+    description: "show arch, os, runner name or not"
   job-status:
     required: false
     default: ${{ job.status }}

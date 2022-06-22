@@ -23,41 +23,58 @@ export const createPayload: (
   githubOption,
   templateOption
 ) => {
-  let jobStatusEmoji = ''
+  const metadata = [
+    contextPart('workflow-name', githubOption.action.workflowName)
+  ]
 
-  switch (jobOption.status) {
-    case 'success': {
-      jobStatusEmoji = ':white_check_mark:'
-      break
+  const sectionText = []
+
+  if (templateOption.default.showTitle) {
+    let jobStatusEmoji = ''
+
+    switch (jobOption.status) {
+      case 'success': {
+        jobStatusEmoji = ':white_check_mark:'
+        break
+      }
+      case 'failure': {
+        jobStatusEmoji = ':no_entry_sign:'
+        break
+      }
+      case 'cancelled': {
+        jobStatusEmoji = ':warning:'
+        break
+      }
+      default: {
+        // no-op
+        break
+      }
     }
-    case 'failure': {
-      jobStatusEmoji = ':no_entry_sign:'
-      break
-    }
-    case 'cancelled': {
-      jobStatusEmoji = ':warning:'
-      break
-    }
-    default: {
-      // no-op
-      break
-    }
+
+    sectionText.push(
+      `${jobStatusEmoji} GitHub Actions workflow *${jobOption.id}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.`
+    )
+    sectionText.push(
+      `You can check the details from https://github.com/${githubOption.repoSlug}/actions/runs/${githubOption.action.runId}`
+    )
+  } else {
+    metadata.push(...alternativeTitleContextParts(jobOption, githubOption))
   }
 
-  const additionalContent = templateOption.content
-    ? await ejs.render(`${templateOption.content}`, templateOption.options, {
+  if (templateOption.content) {
+    sectionText.push(
+      await ejs.render(`${templateOption.content}`, templateOption.options, {
         async: true
       })
-    : ''
+    )
+  }
 
   const blocks = [
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text:
-          `${jobStatusEmoji} GitHub Actions workflow *${githubOption.action.workflowName}* in *${githubOption.repoSlug}* has been *${jobOption.status}*.\n\n` +
-          `*${additionalContent}`
+        text: sectionText.join('\n')
       }
     },
     {
@@ -65,21 +82,11 @@ export const createPayload: (
     },
     {
       type: 'context',
-      elements: jobContextParts(jobOption, githubOption)
-    },
-    {
-      type: 'divider'
-    },
-    {
-      type: 'context',
-      elements: actionContextParts(githubOption)
-    },
-    {
-      type: 'divider'
-    },
-    {
-      type: 'context',
-      elements: buildContextParts(githubOption, jobOption.runner)
+      elements: [
+        ...metadata,
+        ...actionContextParts(githubOption),
+        ...buildContextParts(githubOption, jobOption.runner)
+      ]
     }
   ]
 
@@ -104,12 +111,14 @@ const contextPart: (key: string, value: unknown) => MarkdownBlock = (
   text: `*${key}* : ${value}`
 })
 
-const jobContextParts = (
+const alternativeTitleContextParts = (
   job: JobOption,
   github: GitHubOption
 ): MarkdownBlock[] => {
   return [
+    contextPart('repo', github.repoSlug),
     contextPart('job-id', job.id),
+    contextPart('job-status', job.status),
     contextPart(
       'run-url',
       `https://github.com/${github.repoSlug}/actions/runs/${github.action.runId}`
@@ -147,13 +156,19 @@ const actionContextParts = (github: GitHubOption): MarkdownBlock[] => {
 
 const buildContextParts = (
   github: GitHubOption,
-  runner: RunnerOption
+  runner?: RunnerOption
 ): MarkdownBlock[] => {
+  const blocks = []
+
+  if (runner) {
+    blocks.push(contextPart('arch', runner.arch))
+    blocks.push(contextPart('os', runner.os))
+    blocks.push(contextPart('runner-name', runner.name))
+  }
+
   return [
     contextPart('ref', github.ref),
     contextPart('sha', github.sha),
-    contextPart('arch', runner.arch),
-    contextPart('os', runner.os),
-    contextPart('runner-name', runner.name)
+    ...blocks
   ]
 }

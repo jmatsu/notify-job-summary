@@ -50,13 +50,24 @@ jobs:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           content-template-path: ".github/templates/sample.md"
           job-status: "Hello from template"
+      - run: exit 1
+        continue-on-error: true
       - uses: ./
-        name: "notifications on every execution"
+        name: "success after continue-on-error"
         if: >
-          always()
+          success()
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
           channel: "random"
+          content-template: "success after continue-on-error"
+      - uses: ./
+        name: "failure after continue-on-error"
+        if: >
+          failure()
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL || 'http://localhost:8080' }}
+          channel: "random"
+          content-template: "failure after continue-on-error"
       - uses: ./
         name: "notifications on every execution with changing the author information"
         if: >
@@ -66,3 +77,4 @@ jobs:
           channel: "C0G4GS22F"
           author: "any-name-you-want"
           author-icon-emoji: ":ok:"
+          content-template: "this would always be shown"

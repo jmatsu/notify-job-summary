@@ -8,7 +8,12 @@ export interface EjsOption {
   slack: SlackOption
 }
 
+export interface DefaultOption {
+  showTitle: boolean
+}
+
 export interface TemplateOption {
+  default: DefaultOption
   content?: string
   options: EjsOption
 }
